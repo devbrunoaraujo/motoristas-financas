@@ -1,0 +1,23 @@
+# Java / Maven
+backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+
+# Env
+.env
+*.env.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Claude Code (pessoal, não compartilhado)
+.claude/settings.local.json
