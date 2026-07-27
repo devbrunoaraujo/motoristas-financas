@@ -3,7 +3,7 @@ spring:
     name: motoristas-financas-api
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:financas_db}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=America/Sao_Paulo
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:financas_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Sao_Paulo
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:root}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -23,7 +23,7 @@ server:
   port: 8080
 
 jwt:
-  secret: ${JWT_SECRET:troque-este-segredo-em-producao-por-uma-chave-forte}
+  secret: ${JWT_SECRET:ZmPcnxFTszSISo/oYXdVebzP/IGioKHSOeuVaJnvY50URm9CMx0vGO7BnOfVZvCbZ7mSy2oNyNF223vN++VRkQ==}
   expiration-minutes: 60
 
 springdoc:

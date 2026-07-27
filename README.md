@@ -14,8 +14,13 @@ combustível e despesas, com dashboard de indicadores. PWA mobile-first.
 - `backend/CLAUDE.md` e `frontend/CLAUDE.md`: instruções específicas de cada camada
 
 ## Como rodar
-```
-docker compose up -d
-```
+1. Copie o arquivo de variáveis de ambiente e ajuste os valores (principalmente `JWT_SECRET`):
+   ```
+   cp .env.example .env
+   ```
+2. Suba os containers:
+   ```
+   docker compose up -d
+   ```
 Backend em http://localhost:8080 (Swagger em `/docs`), frontend em
 http://localhost:5173.
