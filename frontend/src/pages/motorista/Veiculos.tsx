@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
 import * as veiculoService from '../../services/veiculoService'
 import type { VeiculoRequest, VeiculoResponse, TipoCombustivel } from '../../types/veiculo'
 
 const TIPOS_COMBUSTIVEL: TipoCombustivel[] = ['GASOLINA', 'ETANOL', 'DIESEL', 'GNV', 'ELETRICO']
 
 export default function Veiculos() {
-  const { logout } = useAuth()
   const [veiculos, setVeiculos] = useState<VeiculoResponse[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -91,12 +89,7 @@ export default function Veiculos() {
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1>Meus Veículos</h1>
-        <button onClick={logout} style={{ padding: '8px 16px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
-          Sair
-        </button>
-      </div>
+      <h1 style={{ marginBottom: 20 }}>Meus Veículos</h1>
 
       {erro && <p style={{ color: 'red', marginBottom: 12 }}>{erro}</p>}
 
