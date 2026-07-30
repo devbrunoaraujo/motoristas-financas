@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import * as registroService from '../../services/registroService'
 import * as veiculoService from '../../services/veiculoService'
-import type { RegistroDiaRequest, RegistroDiaResponse, Plataforma, GanhoPlataformaRequest } from '../../types/registro'
+import type { RegistroDiaResponse, Plataforma, GanhoPlataformaRequest } from '../../types/registro'
 import type { VeiculoResponse } from '../../types/veiculo'
+import { Card, Button, Input, Select, PageHeader, Badge, EmptyState } from '../../components/ui'
+import { Plus, Trash2, Edit3, Calendar, Save, X, FileText } from 'lucide-react'
 
 const PLATAFORMAS: Plataforma[] = ['UBER', 'NOVENTA_E_NOVE', 'IFOOD', 'INDRIVE', 'OUTRA']
 
@@ -20,256 +22,148 @@ export default function RegistroDia() {
   const [kmRodado, setKmRodado] = useState('')
   const [ganhos, setGanhos] = useState<GanhoPlataformaRequest[]>([{ plataforma: 'UBER', valor: 0 }])
 
-  useEffect(() => {
-    carregarDados()
-  }, [])
+  useEffect(() => { carregarDados() }, [])
 
   async function carregarDados() {
     try {
-      setCarregando(true)
-      setErro('')
-      const [regs, veics] = await Promise.all([
-        registroService.listarRegistros(),
-        veiculoService.listarVeiculos()
-      ])
-      setRegistros(regs)
-      setVeiculos(veics)
-      if (veics.length > 0 && veiculoId === 0) {
-        setVeiculoId(veics[0].id)
-      }
-    } catch (err: any) {
-      setErro('Erro ao carregar dados')
-    } finally {
-      setCarregando(false)
-    }
+      setCarregando(true); setErro('')
+      const [regs, veics] = await Promise.all([registroService.listarRegistros(), veiculoService.listarVeiculos()])
+      setRegistros(regs); setVeiculos(veics)
+      if (veics.length > 0 && veiculoId === 0) setVeiculoId(veics[0].id)
+    } catch { setErro('Erro ao carregar dados') } finally { setCarregando(false) }
   }
 
   function limparForm() {
-    setKmRodado('')
-    setGanhos([{ plataforma: 'UBER', valor: 0 }])
-    setData(new Date().toISOString().split('T')[0])
-    setEditando(null)
-    setMostrarForm(false)
-    setErro('')
-    setSucesso('')
+    setKmRodado(''); setGanhos([{ plataforma: 'UBER', valor: 0 }])
+    setData(new Date().toISOString().split('T')[0]); setEditando(null)
+    setMostrarForm(false); setErro(''); setSucesso('')
   }
 
-  function abrirEdicao(registro: RegistroDiaResponse) {
-    setEditando(registro)
-    setVeiculoId(registro.veiculoId)
-    setData(registro.data)
-    setKmRodado(String(registro.kmRodado))
-    setGanhos(registro.ganhos.map(g => ({ plataforma: g.plataforma, valor: g.valor })))
-    setMostrarForm(true)
-    setErro('')
-    setSucesso('')
+  function abrirEdicao(reg: RegistroDiaResponse) {
+    setEditando(reg); setVeiculoId(reg.veiculoId); setData(reg.data)
+    setKmRodado(String(reg.kmRodado))
+    setGanhos(reg.ganhos.map(g => ({ plataforma: g.plataforma, valor: g.valor })))
+    setMostrarForm(true); setErro(''); setSucesso('')
   }
 
-  function abrirNovo() {
-    setEditando(null)
-    setData(new Date().toISOString().split('T')[0])
-    setKmRodado('')
-    setGanhos([{ plataforma: 'UBER', valor: 0 }])
-    setMostrarForm(true)
-    setErro('')
-    setSucesso('')
-  }
-
-  function adicionarGanho() {
-    setGanhos([...ganhos, { plataforma: 'UBER', valor: 0 }])
-  }
-
-  function removerGanho(index: number) {
-    setGanhos(ganhos.filter((_, i) => i !== index))
-  }
-
-  function atualizarGanho(index: number, campo: 'plataforma' | 'valor', valor: any) {
-    const novosGanhos = [...ganhos]
-    novosGanhos[index] = { ...novosGanhos[index], [campo]: campo === 'valor' ? Number(valor) : valor }
-    setGanhos(novosGanhos)
+  function atualizarGanho(i: number, campo: 'plataforma' | 'valor', val: any) {
+    const g = [...ganhos]; g[i] = { ...g[i], [campo]: campo === 'valor' ? Number(val) : val }; setGanhos(g)
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setErro('')
-    setSucesso('')
-
-    const dados: RegistroDiaRequest = {
-      veiculoId,
-      data,
-      kmRodado: Number(kmRodado),
-      ganhos: ganhos.filter(g => g.valor > 0)
-    }
-
+    e.preventDefault(); setErro(''); setSucesso('')
     try {
-      await registroService.criarRegistro(dados)
-      setSucesso(editando ? 'Registro atualizado com sucesso!' : 'Registro salvo com sucesso!')
-      limparForm()
-      carregarDados()
-    } catch (err: any) {
-      setErro(err.response?.data?.mensagem || 'Erro ao salvar registro')
-    }
+      await registroService.criarRegistro({ veiculoId, data, kmRodado: Number(kmRodado), ganhos: ganhos.filter(g => g.valor > 0) })
+      setSucesso(editando ? 'Registro atualizado!' : 'Registro salvo!'); limparForm(); carregarDados()
+    } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
   }
 
   async function handleExcluir(id: number) {
-    if (!confirm('Deseja realmente excluir este registro?')) return
-
-    try {
-      await registroService.excluirRegistro(id)
-      carregarDados()
-    } catch (err: any) {
-      setErro('Erro ao excluir registro')
-    }
+    if (!confirm('Excluir este registro?')) return
+    try { await registroService.excluirRegistro(id); carregarDados() } catch { setErro('Erro ao excluir') }
   }
 
-  function formatarMoeda(valor: number) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  }
+  function fmtMoeda(v: number) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }
+  function fmtData(d: string) { return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') }
 
-  function formatarData(data: string) {
-    return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR')
-  }
-
-  if (carregando) return <div>Carregando...</div>
+  if (carregando) return <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-2xl)' }}>
+    <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: 20 }}>
-      <h1 style={{ marginBottom: 20 }}>Registro do Dia</h1>
+    <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
+      <PageHeader title="Registro do Dia" action={
+        !mostrarForm && <Button size="sm" onClick={() => { setMostrarForm(true); setEditando(null) }} disabled={veiculos.length === 0}>
+          <Plus size={16} /> Novo
+        </Button>
+      } />
 
-      {erro && <p style={{ color: 'red', marginBottom: 12 }}>{erro}</p>}
-      {sucesso && <p style={{ color: 'green', marginBottom: 12 }}>{sucesso}</p>}
+      {erro && <div style={{ padding: '10px 14px', background: 'rgba(225,112,85,0.1)', border: '1px solid rgba(225,112,85,0.2)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: 14, marginBottom: 'var(--space-md)' }}>{erro}</div>}
+      {sucesso && <div style={{ padding: '10px 14px', background: 'rgba(0,184,148,0.1)', border: '1px solid rgba(0,184,148,0.2)', borderRadius: 'var(--radius-md)', color: 'var(--accent)', fontSize: 14, marginBottom: 'var(--space-md)' }}>{sucesso}</div>}
 
-      {!mostrarForm && (
-        <button
-          onClick={abrirNovo}
-          disabled={veiculos.length === 0}
-          style={{ marginBottom: 20, padding: '10px 20px', background: '#28a745', color: '#fff', border: 'none', cursor: 'pointer' }}
-        >
-          + Novo Registro
-        </button>
-      )}
-
-      {veiculos.length === 0 && (
-        <p style={{ color: '#856404', background: '#fff3cd', padding: 12, borderRadius: 4 }}>
-          Cadastre um veículo primeiro para poder registrar seu dia.
-        </p>
-      )}
+      {veiculos.length === 0 && <EmptyState icon={<FileText size={48} />} title="Cadastre um veículo primeiro" />}
 
       {mostrarForm && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: 20, padding: 16, border: '1px solid #ddd', borderRadius: 4 }}>
-          <h2>{editando ? 'Editar Registro' : 'Novo Registro'}</h2>
+        <Card style={{ marginBottom: 'var(--space-lg)' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 'var(--space-md)' }}>{editando ? 'Editar Registro' : 'Novo Registro'}</h2>
+          <form onSubmit={handleSubmit}>
+            <Select label="Veículo" value={veiculoId} onChange={e => setVeiculoId(Number(e.target.value))}
+              options={veiculos.map(v => ({ value: v.id, label: v.apelido }))} />
 
-          <div style={{ marginBottom: 12 }}>
-            <label>Veículo</label>
-            <select
-              value={veiculoId}
-              onChange={e => setVeiculoId(Number(e.target.value))}
-              style={{ width: '100%', padding: 8, marginTop: 4 }}
-            >
-              {veiculos.map(v => (
-                <option key={v.id} value={v.id}>{v.apelido}</option>
+            <Input label="Data" type="date" value={data} onChange={e => setData(e.target.value)} required disabled={!!editando} />
+
+            <Input label="KM Rodado" type="number" step="0.1" min="0.1" value={kmRodado} onChange={e => setKmRodado(e.target.value)} required placeholder="Ex: 150" />
+
+            <div style={{ marginBottom: 'var(--space-md)' }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>Ganhos por Plataforma</label>
+              {ganhos.map((ganho, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                  <select value={ganho.plataforma} onChange={e => atualizarGanho(i, 'plataforma', e.target.value)}
+                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: 14 }}>
+                    {PLATAFORMAS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <input type="number" step="0.01" min="0.01" placeholder="Valor" value={ganho.valor || ''}
+                    onChange={e => atualizarGanho(i, 'valor', e.target.value)}
+                    style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: 14 }} />
+                  {ganhos.length > 1 && (
+                    <button type="button" onClick={() => setGanhos(ganhos.filter((_, j) => j !== i))}
+                      style={{ padding: '10px', background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 'var(--radius-md)', color: 'var(--danger)', cursor: 'pointer' }}>
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
               ))}
-            </select>
-          </div>
+              <button type="button" onClick={() => setGanhos([...ganhos, { plataforma: 'UBER', valor: 0 }])}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'none', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 13 }}>
+                <Plus size={14} /> Adicionar plataforma
+              </button>
+            </div>
 
-          <div style={{ marginBottom: 12 }}>
-            <label>Data do dia de trabalho</label>
-            <input
-              type="date"
-              value={data}
-              onChange={e => setData(e.target.value)}
-              required
-              disabled={!!editando}
-              style={{ width: '100%', padding: 8, marginTop: 4, opacity: editando ? 0.7 : 1 }}
-            />
-            {editando && <small style={{ color: '#666' }}>Para mudar a data, exclua e crie um novo registro.</small>}
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label>KM Rodado (odômetro)</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0.1"
-              value={kmRodado}
-              onChange={e => setKmRodado(e.target.value)}
-              required
-              style={{ width: '100%', padding: 8, marginTop: 4 }}
-            />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label>Ganhos por Plataforma</label>
-            {ganhos.map((ganho, index) => (
-              <div key={index} style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
-                <select
-                  value={ganho.plataforma}
-                  onChange={e => atualizarGanho(index, 'plataforma', e.target.value)}
-                  style={{ flex: 1, padding: 8 }}
-                >
-                  {PLATAFORMAS.map(p => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  placeholder="Valor"
-                  value={ganho.valor || ''}
-                  onChange={e => atualizarGanho(index, 'valor', e.target.value)}
-                  style={{ flex: 1, padding: 8 }}
-                />
-                {ganhos.length > 1 && (
-                  <button type="button" onClick={() => removerGanho(index)} style={{ padding: '8px 12px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                    X
-                  </button>
-                )}
-              </div>
-            ))}
-            <button type="button" onClick={adicionarGanho} style={{ marginTop: 8, padding: '6px 12px', background: '#17a2b8', color: '#fff', border: 'none', cursor: 'pointer' }}>
-              + Adicionar Plataforma
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="submit" style={{ padding: '10px 20px', background: '#007bff', color: '#fff', border: 'none', cursor: 'pointer' }}>
-              {editando ? 'Atualizar' : 'Salvar'}
-            </button>
-            <button type="button" onClick={limparForm} style={{ padding: '10px 20px', background: '#6c757d', color: '#fff', border: 'none', cursor: 'pointer' }}>
-              Cancelar
-            </button>
-          </div>
-        </form>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button type="submit" fullWidth><Save size={16} /> {editando ? 'Atualizar' : 'Salvar'}</Button>
+              <Button variant="ghost" onClick={limparForm}><X size={16} /></Button>
+            </div>
+          </form>
+        </Card>
       )}
 
-      {registros.length === 0 ? (
-        <p>Nenhum registro cadastrado.</p>
+      {registros.length === 0 && !mostrarForm ? (
+        <EmptyState icon={<Calendar size={48} />} title="Nenhum registro" description="Registre seu primeiro dia de trabalho" />
       ) : (
-        <div>
-          {registros.map(reg => (
-            <div key={reg.id} style={{ padding: 16, border: '1px solid #ddd', borderRadius: 4, marginBottom: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3>{formatarData(reg.data)} — {reg.veiculoApelido}</h3>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => abrirEdicao(reg)} style={{ padding: '6px 12px', background: '#ffc107', border: 'none', cursor: 'pointer' }}>
-                    Editar
-                  </button>
-                  <button onClick={() => handleExcluir(reg.id)} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                    Excluir
-                  </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          {registros.map((reg, i) => (
+            <Card key={reg.id} style={{ animationDelay: `${i * 50}ms` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 600 }}>{fmtData(reg.data)}</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{reg.veiculoApelido} • {reg.kmRodado} km</p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => abrirEdicao(reg)} style={{ padding: 6, background: 'var(--bg-input)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: 'pointer' }}><Edit3 size={14} /></button>
+                  <button onClick={() => handleExcluir(reg.id)} style={{ padding: 6, background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', cursor: 'pointer' }}><Trash2 size={14} /></button>
                 </div>
               </div>
-              <p>KM Rodado: {reg.kmRodado} km</p>
-              <p>Ganho Bruto: {formatarMoeda(reg.ganhoBrutoTotal)}</p>
-              <p>Gasto Combustível: {formatarMoeda(reg.gastoCombustivelCalculado)}</p>
-              <p><strong>Lucro Líquido: {formatarMoeda(reg.lucroLiquido)}</strong></p>
-              <div style={{ marginTop: 8, fontSize: 14, color: '#666' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
+                <div style={{ textAlign: 'center', padding: 8, background: 'rgba(0,184,148,0.05)', borderRadius: 'var(--radius-sm)' }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Ganho</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--accent)' }}>{fmtMoeda(reg.ganhoBrutoTotal)}</p>
+                </div>
+                <div style={{ textAlign: 'center', padding: 8, background: 'rgba(225,112,85,0.05)', borderRadius: 'var(--radius-sm)' }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Combustível</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--danger)' }}>{fmtMoeda(reg.gastoCombustivelCalculado)}</p>
+                </div>
+                <div style={{ textAlign: 'center', padding: 8, background: 'rgba(0,184,148,0.05)', borderRadius: 'var(--radius-sm)' }}>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Lucro</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: reg.lucroLiquido >= 0 ? 'var(--accent)' : 'var(--danger)' }}>{fmtMoeda(reg.lucroLiquido)}</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {reg.ganhos.map(g => (
-                  <span key={g.id} style={{ marginRight: 12 }}>{g.plataforma}: {formatarMoeda(g.valor)}</span>
+                  <Badge key={g.id} variant="success">{g.plataforma}: {fmtMoeda(g.valor)}</Badge>
                 ))}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

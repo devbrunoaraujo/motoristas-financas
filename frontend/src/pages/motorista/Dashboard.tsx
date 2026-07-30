@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
+import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
 import * as dashboardService from '../../services/dashboardService'
 import type { DashboardResponse } from '../../types/dashboard'
+import { Card, StatCard, PageHeader } from '../../components/ui'
+import { TrendingUp, Fuel, Receipt, DollarSign, Gauge, BarChart3 } from 'lucide-react'
+
+const COLORS = ['#00b894', '#e17055', '#fdcb6e', '#74b9ff', '#a29bfe']
 
 export default function Dashboard() {
   const [dados, setDados] = useState<DashboardResponse | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
-  useEffect(() => {
-    carregarDashboard()
-  }, [])
+  useEffect(() => { carregarDashboard() }, [])
 
   async function carregarDashboard() {
     try {
@@ -27,46 +30,87 @@ export default function Dashboard() {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
-  if (carregando) return <div>Carregando...</div>
-  if (erro) return <div style={{ color: 'red' }}>{erro}</div>
-  if (!dados) return null
+  if (carregando) return <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-2xl)' }}>
+    <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+
+  if (erro || !dados) return <div style={{ padding: 'var(--space-lg)', color: 'var(--danger)', textAlign: 'center' }}>{erro}</div>
+
+  const areaData = [
+    { name: 'Ganho', value: dados.ganhoBrutoDia },
+    { name: 'Combustível', value: dados.gastoCombustivelDia },
+    { name: 'Lucro', value: dados.lucroLiquidoDia },
+  ]
+
+  const pieData = [
+    { name: 'Combustível', value: Math.abs(dados.gastoCombustivelMes) },
+    { name: 'Despesas', value: Math.abs(dados.despesasMes) },
+    { name: 'Lucro', value: Math.max(0, dados.lucroLiquidoMes) },
+  ].filter(d => d.value > 0)
 
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 20 }}>
-      <h1 style={{ marginBottom: 24 }}>Dashboard</h1>
+    <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
+      <PageHeader title="Dashboard" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <Card titulo="Ganho Bruto (Dia)" valor={formatarMoeda(dados.ganhoBrutoDia)} cor="#28a745" />
-        <Card titulo="Ganho Bruto (Semana)" valor={formatarMoeda(dados.ganhoBrutoSemana)} cor="#28a745" />
-        <Card titulo="Ganho Bruto (Mês)" valor={formatarMoeda(dados.ganhoBrutoMes)} cor="#28a745" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
+        <StatCard title="Ganho Hoje" value={formatarMoeda(dados.ganhoBrutoDia)} icon={<TrendingUp size={20} />} color="var(--accent)" />
+        <StatCard title="Ganho Mês" value={formatarMoeda(dados.ganhoBrutoMes)} icon={<BarChart3 size={20} />} color="var(--accent-light)" />
+        <StatCard title="Combustível Mês" value={formatarMoeda(dados.gastoCombustivelMes)} icon={<Fuel size={20} />} color="var(--danger)" />
+        <StatCard title="Despesas Mês" value={formatarMoeda(dados.despesasMes)} icon={<Receipt size={20} />} color="var(--warning)" />
+        <StatCard title="Lucro Mês" value={formatarMoeda(dados.lucroLiquidoMes)} icon={<DollarSign size={20} />} color={dados.lucroLiquidoMes >= 0 ? 'var(--accent)' : 'var(--danger)'} />
+        <StatCard title="KM Rodado" value={`${dados.kmTotalRodado.toFixed(1)} km`} icon={<Gauge size={20} />} color="var(--info)" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <Card titulo="Gasto Combustível (Dia)" valor={formatarMoeda(dados.gastoCombustivelDia)} cor="#dc3545" />
-        <Card titulo="Gasto Combustível (Semana)" valor={formatarMoeda(dados.gastoCombustivelSemana)} cor="#dc3545" />
-        <Card titulo="Gasto Combustível (Mês)" valor={formatarMoeda(dados.gastoCombustivelMes)} cor="#dc3545" />
-      </div>
+      {/* Area Chart */}
+      <Card style={{ marginBottom: 'var(--space-md)' }}>
+        <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>Resumo do Dia</h3>
+        <ResponsiveContainer width="100%" height={160}>
+          <AreaChart data={areaData}>
+            <defs>
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00b894" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#00b894" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="name" tick={{ fill: '#a0a0c0', fontSize: 12 }} axisLine={false} tickLine={false} />
+            <Tooltip
+              contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
+              formatter={(value) => [formatarMoeda(Number(value)), '']}
+            />
+            <Area type="monotone" dataKey="value" stroke="#00b894" fill="url(#colorValue)" strokeWidth={2} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </Card>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <Card titulo="Despesas (Mês)" valor={formatarMoeda(dados.despesasMes)} cor="#ffc107" />
-        <Card titulo="Lucro Líquido (Dia)" valor={formatarMoeda(dados.lucroLiquidoDia)} cor={dados.lucroLiquidoDia >= 0 ? '#28a745' : '#dc3545'} />
-        <Card titulo="Lucro Líquido (Semana)" valor={formatarMoeda(dados.lucroLiquidoSemana)} cor={dados.lucroLiquidoSemana >= 0 ? '#28a745' : '#dc3545'} />
-        <Card titulo="Lucro Líquido (Mês)" valor={formatarMoeda(dados.lucroLiquidoMes)} cor={dados.lucroLiquidoMes >= 0 ? '#28a745' : '#dc3545'} />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-        <Card titulo="KM Total Rodado (Mês)" valor={`${dados.kmTotalRodado.toFixed(1)} km`} cor="#17a2b8" />
-        <Card titulo="Ganho Médio por KM" valor={formatarMoeda(dados.ganhoMedioPorKm)} cor="#6f42c1" />
-      </div>
-    </div>
-  )
-}
-
-function Card({ titulo, valor, cor }: { titulo: string; valor: string; cor: string }) {
-  return (
-    <div style={{ padding: 16, border: '1px solid #ddd', borderRadius: 8, borderTop: `4px solid ${cor}` }}>
-      <p style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>{titulo}</p>
-      <p style={{ fontSize: 20, fontWeight: 'bold', color: cor }}>{valor}</p>
+      {/* Pie Chart */}
+      {pieData.length > 0 && (
+        <Card>
+          <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 'var(--space-md)' }}>Distribuição de Gastos (Mês)</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)' }}>
+            <ResponsiveContainer width="50%" height={160}>
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={4} dataKey="value">
+                  {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Pie>
+                <Tooltip
+                  contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}
+                  formatter={(value) => [formatarMoeda(Number(value)), '']}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div style={{ flex: 1 }}>
+              {pieData.map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: COLORS[i % COLORS.length] }} />
+                  <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{item.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, marginLeft: 'auto' }}>{formatarMoeda(item.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   )
 }

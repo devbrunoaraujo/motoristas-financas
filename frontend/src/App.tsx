@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
@@ -12,6 +12,7 @@ import Dashboard from './pages/motorista/Dashboard'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsuarios from './pages/admin/AdminUsuarios'
 import AdminPlanos from './pages/admin/AdminPlanos'
+import { LayoutDashboard, Calendar, Car, Fuel, Receipt, Users, CreditCard, LogOut } from 'lucide-react'
 
 function NavBar() {
   const { isAuthenticated, usuario, logout } = useAuth()
@@ -20,40 +21,145 @@ function NavBar() {
 
   const isAdmin = usuario?.role === 'ADMIN'
 
+  const motoristaLinks = [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/registros', icon: Calendar, label: 'Registros' },
+    { to: '/veiculos', icon: Car, label: 'Veículos' },
+    { to: '/combustivel', icon: Fuel, label: 'Combustível' },
+    { to: '/despesas', icon: Receipt, label: 'Despesas' },
+  ]
+
+  const adminLinks = [
+    { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
+    { to: '/admin/planos', icon: CreditCard, label: 'Planos' },
+  ]
+
+  const links = isAdmin ? adminLinks : motoristaLinks
+
   return (
-    <nav style={{ padding: '10px 20px', background: '#f8f9fa', borderBottom: '1px solid #ddd', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-      {isAdmin ? (
-        <>
-          <Link to="/admin">Admin Dashboard</Link>
-          <Link to="/admin/usuarios">Usuários</Link>
-          <Link to="/admin/planos">Planos</Link>
-        </>
-      ) : (
-        <>
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/registros">Registro do Dia</Link>
-          <Link to="/veiculos">Veículos</Link>
-          <Link to="/combustivel">Combustível</Link>
-          <Link to="/despesas">Despesas</Link>
-        </>
-      )}
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 14, color: '#666' }}>{usuario?.nome}</span>
-        <button onClick={logout} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
-          Sair
-        </button>
-      </div>
-    </nav>
+    <>
+      {/* Top bar - desktop */}
+      <header style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 56,
+        background: 'var(--bg-nav)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 var(--space-md)',
+        zIndex: 100,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: 'var(--radius-sm)',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: 14,
+          }}>MF</div>
+          <span style={{ fontWeight: 600, fontSize: 16 }}>Motoristas Finanças</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{usuario?.nome}</span>
+          <button onClick={logout} style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            padding: 6,
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            <LogOut size={18} />
+          </button>
+        </div>
+      </header>
+
+      {/* Bottom nav - mobile */}
+      <nav style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 64,
+        background: 'var(--bg-nav)',
+        backdropFilter: 'blur(10px)',
+        borderTop: '1px solid var(--border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        zIndex: 100,
+        padding: '0 var(--space-xs)',
+      }}>
+        {links.map(link => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.to === '/admin' || link.to === '/dashboard'}
+            style={({ isActive }) => ({
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2,
+              textDecoration: 'none',
+              color: isActive ? 'var(--accent)' : 'var(--text-muted)',
+              fontSize: 10,
+              fontWeight: isActive ? 600 : 400,
+              padding: '6px 8px',
+              borderRadius: 'var(--radius-sm)',
+              transition: 'color var(--transition-fast)',
+              minWidth: 56,
+            })}
+          >
+            <link.icon size={20} />
+            <span>{link.label}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </>
   )
 }
 
 function HomeRedirect() {
   const { isAuthenticated, isLoading, usuario } = useAuth()
 
-  if (isLoading) return <div>Carregando...</div>
+  if (isLoading) return <LoadingScreen />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (usuario?.role === 'ADMIN') return <Navigate to="/admin" replace />
   return <Navigate to="/dashboard" replace />
+}
+
+function LoadingScreen() {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      background: 'var(--bg-primary)',
+    }}>
+      <div style={{
+        width: 40,
+        height: 40,
+        border: '3px solid var(--border)',
+        borderTopColor: 'var(--accent)',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite',
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
 }
 
 function App() {
@@ -61,82 +167,30 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <NavBar />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/assine" element={<Assine />} />
+        <main style={{
+          paddingTop: 56,
+          paddingBottom: 72,
+          minHeight: '100vh',
+        }}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/assine" element={<Assine />} />
 
-          {/* Rotas do Motorista */}
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/registros"
-            element={
-              <PrivateRoute>
-                <RegistroDia />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/veiculos"
-            element={
-              <PrivateRoute>
-                <Veiculos />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/combustivel"
-            element={
-              <PrivateRoute>
-                <Combustivel />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/despesas"
-            element={
-              <PrivateRoute>
-                <Despesas />
-              </PrivateRoute>
-            }
-          />
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/registros" element={<PrivateRoute><RegistroDia /></PrivateRoute>} />
+            <Route path="/veiculos" element={<PrivateRoute><Veiculos /></PrivateRoute>} />
+            <Route path="/combustivel" element={<PrivateRoute><Combustivel /></PrivateRoute>} />
+            <Route path="/despesas" element={<PrivateRoute><Despesas /></PrivateRoute>} />
 
-          {/* Rotas do Admin */}
-          <Route
-            path="/admin"
-            element={
-              <PrivateRoute>
-                <AdminDashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin/usuarios"
-            element={
-              <PrivateRoute>
-                <AdminUsuarios />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin/planos"
-            element={
-              <PrivateRoute>
-                <AdminPlanos />
-              </PrivateRoute>
-            }
-          />
+            <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+            <Route path="/admin/usuarios" element={<PrivateRoute><AdminUsuarios /></PrivateRoute>} />
+            <Route path="/admin/planos" element={<PrivateRoute><AdminPlanos /></PrivateRoute>} />
 
-          <Route path="/" element={<HomeRedirect />} />
-          <Route path="*" element={<HomeRedirect />} />
-        </Routes>
+            <Route path="/" element={<HomeRedirect />} />
+            <Route path="*" element={<HomeRedirect />} />
+          </Routes>
+        </main>
       </AuthProvider>
     </BrowserRouter>
   )

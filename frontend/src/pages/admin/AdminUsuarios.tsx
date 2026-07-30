@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import * as adminService from '../../services/adminService'
 import type { AdminUsuario, Plano } from '../../types/admin'
+import { Card, Button, Select, PageHeader, Badge, EmptyState } from '../../components/ui'
+import { Users, CreditCard, Check } from 'lucide-react'
 
 export default function AdminUsuarios() {
   const [usuarios, setUsuarios] = useState<AdminUsuario[]>([])
@@ -10,137 +12,93 @@ export default function AdminUsuarios() {
   const [confirmando, setConfirmando] = useState<number | null>(null)
   const [planoSelecionado, setPlanoSelecionado] = useState<number>(0)
 
-  useEffect(() => {
-    carregarDados()
-  }, [])
+  useEffect(() => { carregarDados() }, [])
 
   async function carregarDados() {
     try {
       setCarregando(true)
-      const [usuariosData, planosData] = await Promise.all([
-        adminService.listarUsuarios(),
-        adminService.listarPlanos()
-      ])
-      setUsuarios(usuariosData)
-      setPlanos(planosData)
-      if (planosData.length > 0 && planoSelecionado === 0) {
-        setPlanoSelecionado(planosData[0].id)
-      }
-    } catch (err: any) {
-      setErro('Erro ao carregar dados')
-    } finally {
-      setCarregando(false)
-    }
+      const [u, p] = await Promise.all([adminService.listarUsuarios(), adminService.listarPlanos()])
+      setUsuarios(u); setPlanos(p)
+      if (p.length > 0 && planoSelecionado === 0) setPlanoSelecionado(p[0].id)
+    } catch { setErro('Erro ao carregar dados') } finally { setCarregando(false) }
   }
 
-  async function handleConfirmarPagamento(usuarioId: number) {
-    if (!planoSelecionado) {
-      setErro('Selecione um plano')
-      return
-    }
-
-    try {
-      await adminService.confirmarPagamento({ usuarioId, planoId: planoSelecionado })
-      setConfirmando(null)
-      carregarDados()
-    } catch (err: any) {
-      setErro(err.response?.data?.mensagem || 'Erro ao confirmar pagamento')
-    }
+  async function handleConfirmar(usuarioId: number) {
+    if (!planoSelecionado) { setErro('Selecione um plano'); return }
+    try { await adminService.confirmarPagamento({ usuarioId, planoId: planoSelecionado }); setConfirmando(null); carregarDados() }
+    catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao confirmar') }
   }
 
-  function formatarData(data?: string) {
-    if (!data) return '—'
-    return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR')
+  function fmtData(d?: string) { return d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '—' }
+
+  const statusBadge: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' }> = {
+    TRIAL_ATIVO: { label: 'Trial Ativo', variant: 'success' },
+    TRIAL_EXPIRADO: { label: 'Trial Expirado', variant: 'warning' },
+    ATIVO: { label: 'Ativo', variant: 'info' },
+    BLOQUEADO: { label: 'Bloqueado', variant: 'danger' },
   }
 
-  function formatarStatus(status: string) {
-    const statusMap: Record<string, { texto: string; cor: string }> = {
-      'TRIAL_ATIVO': { texto: 'Trial Ativo', cor: '#28a745' },
-      'TRIAL_EXPIRADO': { texto: 'Trial Expirado', cor: '#ffc107' },
-      'ATIVO': { texto: 'Ativo', cor: '#17a2b8' },
-      'BLOQUEADO': { texto: 'Bloqueado', cor: '#dc3545' }
-    }
-    const s = statusMap[status] || { texto: status, cor: '#666' }
-    return <span style={{ padding: '2px 8px', borderRadius: 4, background: s.cor, color: '#fff', fontSize: 12 }}>{s.texto}</span>
-  }
-
-  if (carregando) return <div>Carregando...</div>
+  if (carregando) return <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-2xl)' }}>
+    <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: 20 }}>
-      <h1 style={{ marginBottom: 24 }}>Usuários</h1>
+    <div style={{ padding: 'var(--space-md)', maxWidth: 700, margin: '0 auto' }}>
+      <PageHeader title="Usuários" />
 
-      {erro && <p style={{ color: 'red', marginBottom: 12 }}>{erro}</p>}
+      {erro && <div style={{ padding: '10px 14px', background: 'rgba(225,112,85,0.1)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: 14, marginBottom: 'var(--space-md)' }}>{erro}</div>}
 
-      <div style={{ marginBottom: 16, padding: 12, background: '#f8f9fa', borderRadius: 4 }}>
-        <label>Plano para confirmação: </label>
-        <select
-          value={planoSelecionado}
-          onChange={e => setPlanoSelecionado(Number(e.target.value))}
-          style={{ padding: 6, marginLeft: 8 }}
-        >
-          {planos.map(p => (
-            <option key={p.id} value={p.id}>{p.nome} — R$ {p.valorMensal}</option>
-          ))}
-        </select>
-      </div>
+      {planos.length > 0 && (
+        <Card style={{ marginBottom: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+          <CreditCard size={18} color="var(--accent)" />
+          <Select value={planoSelecionado} onChange={e => setPlanoSelecionado(Number(e.target.value))}
+            options={planos.map(p => ({ value: p.id, label: `${p.nome} — R$ ${p.valorMensal}` }))}
+            style={{ marginBottom: 0, flex: 1 }} />
+        </Card>
+      )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {usuarios.map(usuario => (
-          <div key={usuario.id} style={{ padding: 16, border: '1px solid #ddd', borderRadius: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-              <div>
-                <h3 style={{ marginBottom: 4 }}>{usuario.nome}</h3>
-                <p style={{ color: '#666', fontSize: 14 }}>{usuario.email}</p>
+      {usuarios.length === 0 ? (
+        <EmptyState icon={<Users size={48} />} title="Nenhum usuário" />
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          {usuarios.map((u, i) => (
+            <Card key={u.id} style={{ animationDelay: `${i * 50}ms` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 600 }}>{u.nome}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{u.email}</p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <Badge variant={statusBadge[u.status]?.variant || 'default'}>{statusBadge[u.status]?.label || u.status}</Badge>
+                  <Badge>{u.role}</Badge>
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {formatarStatus(usuario.status)}
-                <span style={{ fontSize: 12, color: '#666' }}>{usuario.role}</span>
-              </div>
-            </div>
-
-            <div style={{ marginTop: 8, fontSize: 14, color: '#666' }}>
-              <span>Trial: {formatarData(usuario.dataInicioTrial)} até {formatarData(usuario.dataFimTrial)}</span>
-              <span style={{ marginLeft: 16 }}>Cadastro: {formatarData(usuario.criadoEm)}</span>
-            </div>
-
-            {usuario.assinaturaAtiva && (
-              <div style={{ marginTop: 8, padding: 8, background: '#e7f3ff', borderRadius: 4, fontSize: 14 }}>
-                Assinatura: {usuario.assinaturaAtiva.planoNome} — {usuario.assinaturaAtiva.status} — Expira em {formatarData(usuario.assinaturaAtiva.dataExpiracao)}
-              </div>
-            )}
-
-            {(usuario.status === 'TRIAL_EXPIRADO' || usuario.status === 'BLOQUEADO') && (
-              <div style={{ marginTop: 8 }}>
-                {confirmando === usuario.id ? (
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Trial: {fmtData(u.dataInicioTrial)} até {fmtData(u.dataFimTrial)} • Cadastro: {fmtData(u.criadoEm)}
+              </p>
+              {u.assinaturaAtiva && (
+                <div style={{ padding: 8, background: 'rgba(0,184,148,0.05)', borderRadius: 'var(--radius-sm)', fontSize: 13, marginBottom: 8 }}>
+                  {u.assinaturaAtiva.planoNome} — {u.assinaturaAtiva.status} — Expira em {fmtData(u.assinaturaAtiva.dataExpiracao)}
+                </div>
+              )}
+              {(u.status === 'TRIAL_EXPIRADO' || u.status === 'BLOQUEADO') && (
+                confirmando === u.id ? (
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span>Confirmar pagamento?</span>
-                    <button
-                      onClick={() => handleConfirmarPagamento(usuario.id)}
-                      style={{ padding: '4px 12px', background: '#28a745', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: 4 }}
-                    >
-                      Sim
-                    </button>
-                    <button
-                      onClick={() => setConfirmando(null)}
-                      style={{ padding: '4px 12px', background: '#6c757d', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: 4 }}
-                    >
-                      Não
-                    </button>
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Confirmar pagamento?</span>
+                    <Button size="sm" onClick={() => handleConfirmar(u.id)}><Check size={14} /> Sim</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setConfirmando(null)}>Não</Button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setConfirmando(usuario.id)}
-                    style={{ padding: '6px 12px', background: '#007bff', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: 4 }}
-                  >
-                    Confirmar Pagamento
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+                  <Button size="sm" onClick={() => setConfirmando(u.id)}>
+                    <CreditCard size={14} /> Confirmar Pagamento
+                  </Button>
+                )
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

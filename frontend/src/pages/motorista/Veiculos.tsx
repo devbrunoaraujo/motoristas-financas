@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react'
 import * as veiculoService from '../../services/veiculoService'
 import type { VeiculoRequest, VeiculoResponse, TipoCombustivel } from '../../types/veiculo'
+import { Card, Button, Input, Select, PageHeader, EmptyState } from '../../components/ui'
+import { Car, Plus, Edit3, Trash2, Save, X } from 'lucide-react'
 
-const TIPOS_COMBUSTIVEL: TipoCombustivel[] = ['GASOLINA', 'ETANOL', 'DIESEL', 'GNV', 'ELETRICO']
+const TIPOS: { value: TipoCombustivel; label: string }[] = [
+  { value: 'GASOLINA', label: 'Gasolina' }, { value: 'ETANOL', label: 'Etanol' },
+  { value: 'DIESEL', label: 'Diesel' }, { value: 'GNV', label: 'GNV' }, { value: 'ELETRICO', label: 'Elétrico' },
+]
 
 export default function Veiculos() {
   const [veiculos, setVeiculos] = useState<VeiculoResponse[]>([])
@@ -16,173 +21,83 @@ export default function Veiculos() {
   const [tipoCombustivel, setTipoCombustivel] = useState<TipoCombustivel>('GASOLINA')
   const [autonomia, setAutonomia] = useState('')
 
-  useEffect(() => {
-    carregarVeiculos()
-  }, [])
+  useEffect(() => { carregarVeiculos() }, [])
 
   async function carregarVeiculos() {
-    try {
-      setCarregando(true)
-      const data = await veiculoService.listarVeiculos()
-      setVeiculos(data)
-    } catch (err: any) {
-      setErro('Erro ao carregar veículos')
-    } finally {
-      setCarregando(false)
-    }
+    try { setCarregando(true); setVeiculos(await veiculoService.listarVeiculos()) }
+    catch { setErro('Erro ao carregar veículos') } finally { setCarregando(false) }
   }
 
   function limparForm() {
-    setApelido('')
-    setPlaca('')
-    setTipoCombustivel('GASOLINA')
-    setAutonomia('')
-    setEditando(null)
-    setMostrarForm(false)
+    setApelido(''); setPlaca(''); setTipoCombustivel('GASOLINA'); setAutonomia('')
+    setEditando(null); setMostrarForm(false)
   }
 
-  function abrirEdicao(veiculo: VeiculoResponse) {
-    setEditando(veiculo)
-    setApelido(veiculo.apelido)
-    setPlaca(veiculo.placa || '')
-    setTipoCombustivel(veiculo.tipoCombustivel)
-    setAutonomia(String(veiculo.autonomia))
-    setMostrarForm(true)
+  function abrirEdicao(v: VeiculoResponse) {
+    setEditando(v); setApelido(v.apelido); setPlaca(v.placa || '')
+    setTipoCombustivel(v.tipoCombustivel); setAutonomia(String(v.autonomia)); setMostrarForm(true)
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setErro('')
-
-    const dados: VeiculoRequest = {
-      apelido,
-      placa: placa || undefined,
-      tipoCombustivel,
-      autonomia: Number(autonomia)
-    }
-
+    e.preventDefault(); setErro('')
+    const dados: VeiculoRequest = { apelido, placa: placa || undefined, tipoCombustivel, autonomia: Number(autonomia) }
     try {
-      if (editando) {
-        await veiculoService.atualizarVeiculo(editando.id, dados)
-      } else {
-        await veiculoService.criarVeiculo(dados)
-      }
-      limparForm()
-      carregarVeiculos()
-    } catch (err: any) {
-      setErro(err.response?.data?.mensagem || 'Erro ao salvar veículo')
-    }
+      editando ? await veiculoService.atualizarVeiculo(editando.id, dados) : await veiculoService.criarVeiculo(dados)
+      limparForm(); carregarVeiculos()
+    } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
   }
 
   async function handleInativar(id: number) {
-    if (!confirm('Deseja realmente inativar este veículo?')) return
-
-    try {
-      await veiculoService.inativarVeiculo(id)
-      carregarVeiculos()
-    } catch (err: any) {
-      setErro('Erro ao inativar veículo')
-    }
+    if (!confirm('Inativar este veículo?')) return
+    try { await veiculoService.inativarVeiculo(id); carregarVeiculos() } catch { setErro('Erro ao inativar') }
   }
 
-  if (carregando) return <div>Carregando...</div>
+  if (carregando) return <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-2xl)' }}>
+    <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: 20 }}>
-      <h1 style={{ marginBottom: 20 }}>Meus Veículos</h1>
+    <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
+      <PageHeader title="Veículos" action={
+        !mostrarForm && <Button size="sm" onClick={() => setMostrarForm(true)}><Plus size={16} /> Novo</Button>
+      } />
 
-      {erro && <p style={{ color: 'red', marginBottom: 12 }}>{erro}</p>}
-
-      {!mostrarForm && (
-        <button
-          onClick={() => setMostrarForm(true)}
-          style={{ marginBottom: 20, padding: '10px 20px', background: '#28a745', color: '#fff', border: 'none', cursor: 'pointer' }}
-        >
-          + Novo Veículo
-        </button>
-      )}
+      {erro && <div style={{ padding: '10px 14px', background: 'rgba(225,112,85,0.1)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: 14, marginBottom: 'var(--space-md)' }}>{erro}</div>}
 
       {mostrarForm && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: 20, padding: 16, border: '1px solid #ddd', borderRadius: 4 }}>
-          <h2>{editando ? 'Editar Veículo' : 'Novo Veículo'}</h2>
-
-          <div style={{ marginBottom: 12 }}>
-            <label>Apelido</label>
-            <input
-              type="text"
-              value={apelido}
-              onChange={e => setApelido(e.target.value)}
-              required
-              style={{ width: '100%', padding: 8, marginTop: 4 }}
-            />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label>Placa (opcional)</label>
-            <input
-              type="text"
-              value={placa}
-              onChange={e => setPlaca(e.target.value)}
-              style={{ width: '100%', padding: 8, marginTop: 4 }}
-            />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label>Tipo de Combustível</label>
-            <select
-              value={tipoCombustivel}
-              onChange={e => setTipoCombustivel(e.target.value as TipoCombustivel)}
-              style={{ width: '100%', padding: 8, marginTop: 4 }}
-            >
-              {TIPOS_COMBUSTIVEL.map(tipo => (
-                <option key={tipo} value={tipo}>{tipo}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label>Autonomia (km/l ou km/kWh)</label>
-            <input
-              type="number"
-              step="0.1"
-              min="0.1"
-              value={autonomia}
-              onChange={e => setAutonomia(e.target.value)}
-              required
-              style={{ width: '100%', padding: 8, marginTop: 4 }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="submit" style={{ padding: '10px 20px', background: '#007bff', color: '#fff', border: 'none', cursor: 'pointer' }}>
-              {editando ? 'Salvar' : 'Cadastrar'}
-            </button>
-            <button type="button" onClick={limparForm} style={{ padding: '10px 20px', background: '#6c757d', color: '#fff', border: 'none', cursor: 'pointer' }}>
-              Cancelar
-            </button>
-          </div>
-        </form>
+        <Card style={{ marginBottom: 'var(--space-lg)' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, marginBottom: 'var(--space-md)' }}>{editando ? 'Editar Veículo' : 'Novo Veículo'}</h2>
+          <form onSubmit={handleSubmit}>
+            <Input label="Apelido" value={apelido} onChange={e => setApelido(e.target.value)} placeholder="Ex: Onix 2022" required />
+            <Input label="Placa (opcional)" value={placa} onChange={e => setPlaca(e.target.value)} placeholder="ABC1D23" />
+            <Select label="Combustível" value={tipoCombustivel} onChange={e => setTipoCombustivel(e.target.value as TipoCombustivel)} options={TIPOS} />
+            <Input label="Autonomia (km/l)" type="number" step="0.1" min="0.1" value={autonomia} onChange={e => setAutonomia(e.target.value)} required placeholder="Ex: 12.5" />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button type="submit" fullWidth><Save size={16} /> {editando ? 'Salvar' : 'Cadastrar'}</Button>
+              <Button variant="ghost" onClick={limparForm}><X size={16} /></Button>
+            </div>
+          </form>
+        </Card>
       )}
 
-      {veiculos.length === 0 ? (
-        <p>Nenhum veículo cadastrado.</p>
+      {veiculos.length === 0 && !mostrarForm ? (
+        <EmptyState icon={<Car size={48} />} title="Nenhum veículo" description="Cadastre seu primeiro veículo" />
       ) : (
-        <div>
-          {veiculos.map(veiculo => (
-            <div key={veiculo.id} style={{ padding: 16, border: '1px solid #ddd', borderRadius: 4, marginBottom: 12 }}>
-              <h3>{veiculo.apelido}</h3>
-              <p>Placa: {veiculo.placa || '—'}</p>
-              <p>Combustível: {veiculo.tipoCombustivel}</p>
-              <p>Autonomia: {veiculo.autonomia} km/l</p>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button onClick={() => abrirEdicao(veiculo)} style={{ padding: '6px 12px', background: '#ffc107', border: 'none', cursor: 'pointer' }}>
-                  Editar
-                </button>
-                <button onClick={() => handleInativar(veiculo.id)} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                  Inativar
-                </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          {veiculos.map((v, i) => (
+            <Card key={v.id} style={{ animationDelay: `${i * 50}ms` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <p style={{ fontSize: 16, fontWeight: 600 }}>{v.apelido}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{v.placa || 'Sem placa'} • {v.tipoCombustivel} • {v.autonomia} km/l</p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => abrirEdicao(v)} style={{ padding: 8, background: 'var(--bg-input)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--text-secondary)', cursor: 'pointer' }}><Edit3 size={14} /></button>
+                  <button onClick={() => handleInativar(v.id)} style={{ padding: 8, background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

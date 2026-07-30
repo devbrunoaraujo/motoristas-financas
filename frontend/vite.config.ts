@@ -7,22 +7,44 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Motoristas Finanças',
-        short_name: 'MFinanças',
+        short_name: 'MF Finanças',
         description: 'Controle financeiro para motoristas de aplicativo',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#0a0a1a',
+        background_color: '#0a0a1a',
         display: 'standalone',
         start_url: '/',
+        orientation: 'portrait',
+        categories: ['finance', 'business'],
         icons: [
-          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' }
-        ]
-      }
-    })
+          {
+            src: '/favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/localhost:8080\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60,
+              },
+            },
+          },
+        ],
+      },
+    }),
   ],
   server: {
-    port: 5173
-  }
+    port: 5173,
+  },
 })
