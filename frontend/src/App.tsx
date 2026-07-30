@@ -7,6 +7,7 @@ import Veiculos from './pages/motorista/Veiculos'
 import Combustivel from './pages/motorista/Combustivel'
 import RegistroDia from './pages/motorista/RegistroDia'
 import Despesas from './pages/motorista/Despesas'
+import Dashboard from './pages/motorista/Dashboard'
 
 function NavBar() {
   const { isAuthenticated, logout } = useAuth()
@@ -15,6 +16,7 @@ function NavBar() {
 
   return (
     <nav style={{ padding: '10px 20px', background: '#f8f9fa', borderBottom: '1px solid #ddd', display: 'flex', gap: 16, alignItems: 'center' }}>
+      <Link to="/dashboard">Dashboard</Link>
       <Link to="/registros">Registro do Dia</Link>
       <Link to="/veiculos">Veículos</Link>
       <Link to="/combustivel">Combustível</Link>
@@ -36,6 +38,14 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/registros"
             element={
@@ -68,8 +78,8 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/registros" replace />} />
-          <Route path="*" element={<Navigate to="/registros" replace />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
