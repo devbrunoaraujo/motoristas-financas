@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
 import Cadastro from './pages/Cadastro'
+import Assine from './pages/Assine'
 import Veiculos from './pages/motorista/Veiculos'
 import Combustivel from './pages/motorista/Combustivel'
 import RegistroDia from './pages/motorista/RegistroDia'
@@ -38,6 +39,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/assine" element={<Assine />} />
           <Route
             path="/dashboard"
             element={

@@ -20,6 +20,15 @@ api.interceptors.response.use(
       localStorage.removeItem('usuario')
       window.location.href = '/login'
     }
+
+    if (error.response?.status === 403) {
+      const statusUsuario = error.response.data?.statusUsuario
+
+      if (statusUsuario === 'TRIAL_EXPIRADO' || statusUsuario === 'BLOQUEADO') {
+        window.location.href = '/assine'
+      }
+    }
+
     return Promise.reject(error)
   }
 )
