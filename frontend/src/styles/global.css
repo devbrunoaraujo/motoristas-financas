@@ -154,6 +154,23 @@ body::before {
   }
 }
 
+/* Form elements */
+select {
+  background-color: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+}
+
+select option {
+  background-color: #1a1a2e;
+  color: var(--text-primary);
+  padding: 8px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
 /* Utility classes */
 .glass {
   background: var(--bg-card);

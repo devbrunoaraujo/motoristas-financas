@@ -14,8 +14,9 @@ import Manutencao from './pages/motorista/Manutencao'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsuarios from './pages/admin/AdminUsuarios'
 import AdminPlanos from './pages/admin/AdminPlanos'
+import AdminPlataformas from './pages/admin/AdminPlataformas'
 import Configuracoes from './pages/admin/Configuracoes'
-import { LayoutDashboard, Calendar, Car, Receipt, Target, Wrench, Users, CreditCard, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Calendar, Car, Receipt, Target, Wrench, Users, CreditCard, Layers, Settings, LogOut } from 'lucide-react'
 
 function NavBar() {
   const { isAuthenticated, usuario, logout } = useAuth()
@@ -37,6 +38,7 @@ function NavBar() {
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
     { to: '/admin/planos', icon: CreditCard, label: 'Planos' },
+    { to: '/admin/plataformas', icon: Layers, label: 'Plataformas' },
     { to: '/admin/configuracoes', icon: Settings, label: 'Config' },
   ]
 
@@ -193,6 +195,7 @@ function App() {
             <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
             <Route path="/admin/usuarios" element={<PrivateRoute><AdminUsuarios /></PrivateRoute>} />
             <Route path="/admin/planos" element={<PrivateRoute><AdminPlanos /></PrivateRoute>} />
+            <Route path="/admin/plataformas" element={<PrivateRoute><AdminPlataformas /></PrivateRoute>} />
             <Route path="/admin/configuracoes" element={<PrivateRoute><Configuracoes /></PrivateRoute>} />
 
             <Route path="/" element={<HomeRedirect />} />
