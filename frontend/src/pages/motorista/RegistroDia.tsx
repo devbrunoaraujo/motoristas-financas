@@ -11,9 +11,12 @@ export default function RegistroDia() {
   const [veiculos, setVeiculos] = useState<VeiculoResponse[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
+  const [sucesso, setSucesso] = useState('')
   const [mostrarForm, setMostrarForm] = useState(false)
+  const [editando, setEditando] = useState<RegistroDiaResponse | null>(null)
 
   const [veiculoId, setVeiculoId] = useState<number>(0)
+  const [data, setData] = useState(new Date().toISOString().split('T')[0])
   const [kmRodado, setKmRodado] = useState('')
   const [ganhos, setGanhos] = useState<GanhoPlataformaRequest[]>([{ plataforma: 'UBER', valor: 0 }])
 
@@ -24,6 +27,7 @@ export default function RegistroDia() {
   async function carregarDados() {
     try {
       setCarregando(true)
+      setErro('')
       const [regs, veics] = await Promise.all([
         registroService.listarRegistros(),
         veiculoService.listarVeiculos()
@@ -43,7 +47,32 @@ export default function RegistroDia() {
   function limparForm() {
     setKmRodado('')
     setGanhos([{ plataforma: 'UBER', valor: 0 }])
+    setData(new Date().toISOString().split('T')[0])
+    setEditando(null)
     setMostrarForm(false)
+    setErro('')
+    setSucesso('')
+  }
+
+  function abrirEdicao(registro: RegistroDiaResponse) {
+    setEditando(registro)
+    setVeiculoId(registro.veiculoId)
+    setData(registro.data)
+    setKmRodado(String(registro.kmRodado))
+    setGanhos(registro.ganhos.map(g => ({ plataforma: g.plataforma, valor: g.valor })))
+    setMostrarForm(true)
+    setErro('')
+    setSucesso('')
+  }
+
+  function abrirNovo() {
+    setEditando(null)
+    setData(new Date().toISOString().split('T')[0])
+    setKmRodado('')
+    setGanhos([{ plataforma: 'UBER', valor: 0 }])
+    setMostrarForm(true)
+    setErro('')
+    setSucesso('')
   }
 
   function adicionarGanho() {
@@ -63,15 +92,18 @@ export default function RegistroDia() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
+    setSucesso('')
 
     const dados: RegistroDiaRequest = {
       veiculoId,
+      data,
       kmRodado: Number(kmRodado),
       ganhos: ganhos.filter(g => g.valor > 0)
     }
 
     try {
       await registroService.criarRegistro(dados)
+      setSucesso(editando ? 'Registro atualizado com sucesso!' : 'Registro salvo com sucesso!')
       limparForm()
       carregarDados()
     } catch (err: any) {
@@ -105,10 +137,11 @@ export default function RegistroDia() {
       <h1 style={{ marginBottom: 20 }}>Registro do Dia</h1>
 
       {erro && <p style={{ color: 'red', marginBottom: 12 }}>{erro}</p>}
+      {sucesso && <p style={{ color: 'green', marginBottom: 12 }}>{sucesso}</p>}
 
       {!mostrarForm && (
         <button
-          onClick={() => setMostrarForm(true)}
+          onClick={abrirNovo}
           disabled={veiculos.length === 0}
           style={{ marginBottom: 20, padding: '10px 20px', background: '#28a745', color: '#fff', border: 'none', cursor: 'pointer' }}
         >
@@ -124,7 +157,7 @@ export default function RegistroDia() {
 
       {mostrarForm && (
         <form onSubmit={handleSubmit} style={{ marginBottom: 20, padding: 16, border: '1px solid #ddd', borderRadius: 4 }}>
-          <h2>Novo Registro</h2>
+          <h2>{editando ? 'Editar Registro' : 'Novo Registro'}</h2>
 
           <div style={{ marginBottom: 12 }}>
             <label>Veículo</label>
@@ -137,6 +170,19 @@ export default function RegistroDia() {
                 <option key={v.id} value={v.id}>{v.apelido}</option>
               ))}
             </select>
+          </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <label>Data do dia de trabalho</label>
+            <input
+              type="date"
+              value={data}
+              onChange={e => setData(e.target.value)}
+              required
+              disabled={!!editando}
+              style={{ width: '100%', padding: 8, marginTop: 4, opacity: editando ? 0.7 : 1 }}
+            />
+            {editando && <small style={{ color: '#666' }}>Para mudar a data, exclua e crie um novo registro.</small>}
           </div>
 
           <div style={{ marginBottom: 12 }}>
@@ -188,7 +234,7 @@ export default function RegistroDia() {
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="submit" style={{ padding: '10px 20px', background: '#007bff', color: '#fff', border: 'none', cursor: 'pointer' }}>
-              Salvar
+              {editando ? 'Atualizar' : 'Salvar'}
             </button>
             <button type="button" onClick={limparForm} style={{ padding: '10px 20px', background: '#6c757d', color: '#fff', border: 'none', cursor: 'pointer' }}>
               Cancelar
@@ -205,9 +251,14 @@ export default function RegistroDia() {
             <div key={reg.id} style={{ padding: 16, border: '1px solid #ddd', borderRadius: 4, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3>{formatarData(reg.data)} — {reg.veiculoApelido}</h3>
-                <button onClick={() => handleExcluir(reg.id)} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
-                  Excluir
-                </button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => abrirEdicao(reg)} style={{ padding: '6px 12px', background: '#ffc107', border: 'none', cursor: 'pointer' }}>
+                    Editar
+                  </button>
+                  <button onClick={() => handleExcluir(reg.id)} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
+                    Excluir
+                  </button>
+                </div>
               </div>
               <p>KM Rodado: {reg.kmRodado} km</p>
               <p>Ganho Bruto: {formatarMoeda(reg.ganhoBrutoTotal)}</p>

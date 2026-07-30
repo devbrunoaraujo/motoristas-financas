@@ -40,7 +40,7 @@ public class RegistroDiaController {
             @AuthenticationPrincipal User user,
             @RequestBody @Valid RegistroDiaRequest request) {
         Long usuarioId = getUsuarioId(user);
-        return ResponseEntity.ok(registroService.criar(usuarioId, request));
+        return ResponseEntity.ok(registroService.criarOuAtualizar(usuarioId, request));
     }
 
     @DeleteMapping("/{id}")

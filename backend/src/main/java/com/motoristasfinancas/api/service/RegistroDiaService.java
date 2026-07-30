@@ -2,7 +2,7 @@ package com.motoristasfinancas.api.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -37,19 +37,13 @@ public class RegistroDiaService {
     }
 
     @Transactional
-    public RegistroDiaResponse criar(Long usuarioId, RegistroDiaRequest request) {
+    public RegistroDiaResponse criarOuAtualizar(Long usuarioId, RegistroDiaRequest request) {
         Veiculo veiculo = veiculoRepository.findByIdAndUsuarioId(request.veiculoId(), usuarioId)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
 
-        LocalDate hoje = LocalDate.now();
-
-        if (registroRepository.findByUsuarioIdAndData(usuarioId, hoje).isPresent()) {
-            throw new RuntimeException("Já existe um registro para hoje");
-        }
-
         PrecoCombustivel precoVigente = precoRepository.findVigente(
-                usuarioId, veiculo.getTipoCombustivel(), hoje)
-                .orElseThrow(() -> new RuntimeException("Nenhum preço de combustível vigente cadastrado"));
+                usuarioId, veiculo.getTipoCombustivel(), request.data())
+                .orElseThrow(() -> new RuntimeException("Nenhum preço de combustível vigente cadastrado para esta data"));
 
         BigDecimal gastoCombustivel = calcularGastoCombustivel(
                 request.kmRodado(), veiculo.getAutonomia(), precoVigente.getPreco());
@@ -58,14 +52,26 @@ public class RegistroDiaService {
                 .map(RegistroDiaRequest.GanhoPlataformaRequest::valor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        RegistroDia registro = new RegistroDia();
-        registro.setUsuario(veiculo.getUsuario());
-        registro.setVeiculo(veiculo);
-        registro.setData(hoje);
-        registro.setKmRodado(request.kmRodado());
-        registro.setGanhoBrutoTotal(ganhoBrutoTotal);
-        registro.setGastoCombustivelCalculado(gastoCombustivel);
-        registro.setLucroLiquido(ganhoBrutoTotal.subtract(gastoCombustivel));
+        RegistroDia registro = registroRepository.findByUsuarioIdAndData(usuarioId, request.data())
+                .orElse(null);
+
+        if (registro != null) {
+            registro.getGanhos().clear();
+            registro.setKmRodado(request.kmRodado());
+            registro.setGanhoBrutoTotal(ganhoBrutoTotal);
+            registro.setGastoCombustivelCalculado(gastoCombustivel);
+            registro.setLucroLiquido(ganhoBrutoTotal.subtract(gastoCombustivel));
+        } else {
+            registro = new RegistroDia();
+            registro.setUsuario(veiculo.getUsuario());
+            registro.setVeiculo(veiculo);
+            registro.setData(request.data());
+            registro.setKmRodado(request.kmRodado());
+            registro.setGanhoBrutoTotal(ganhoBrutoTotal);
+            registro.setGastoCombustivelCalculado(gastoCombustivel);
+            registro.setLucroLiquido(ganhoBrutoTotal.subtract(gastoCombustivel));
+            registro.setGanhos(new ArrayList<>());
+        }
 
         for (RegistroDiaRequest.GanhoPlataformaRequest ganhoReq : request.ganhos()) {
             GanhoPorPlataforma ganho = new GanhoPorPlataforma();

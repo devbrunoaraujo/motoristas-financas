@@ -7,6 +7,7 @@ export interface GanhoPlataformaRequest {
 
 export interface RegistroDiaRequest {
   veiculoId: number
+  data: string
   kmRodado: number
   ganhos: GanhoPlataformaRequest[]
 }
