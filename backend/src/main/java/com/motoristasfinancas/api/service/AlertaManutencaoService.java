@@ -43,7 +43,6 @@ public class AlertaManutencaoService {
         alerta.setVeiculo(veiculo);
         alerta.setTipo(request.tipo());
         alerta.setAtivo(true);
-        alerta.setAlertarAposKm(request.alertarAposKm());
         alerta.setAlertarAposData(request.alertarAposData());
 
         alerta = alertaRepository.save(alerta);
@@ -72,7 +71,6 @@ public class AlertaManutencaoService {
                 a.getVeiculo().getApelido(),
                 a.getTipo(),
                 a.isAtivo(),
-                a.getAlertarAposKm(),
                 a.getAlertarAposData()
         );
     }

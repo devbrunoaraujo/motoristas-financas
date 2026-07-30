@@ -81,8 +81,7 @@ export default function Manutencao() {
     e.preventDefault(); setErro(''); setSucesso('')
     try {
       await manutencaoService.criarAlerta(veiculoId, {
-        tipo, alertarAposKm: proximoKm ? Number(proximoKm) : undefined,
-        alertarAposData: proximaData || undefined,
+        tipo, alertarAposData: proximaData,
       })
       setSucesso('Alerta criado!'); limparForm(); carregarDados()
     } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao criar alerta') }
@@ -146,13 +145,12 @@ export default function Manutencao() {
       {/* Formulário de alerta */}
       {mostrarAlertaForm && (
         <Card style={{ marginBottom: 'var(--space-md)' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 'var(--space-md)' }}>Criar Alerta</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 'var(--space-md)' }}>Criar Alerta por Data</h3>
           <form onSubmit={handleAlerta}>
             <Select label="Veículo" value={veiculoId} onChange={e => setVeiculoId(Number(e.target.value))}
               options={veiculos.map(v => ({ value: v.id, label: v.apelido }))} />
-            <Select label="Tipo" value={tipo} onChange={e => setTipo(e.target.value as TipoManutencao)} options={TIPOS} />
-            <Input label="Alertar após KM" type="number" step="0.1" value={proximoKm} onChange={e => setProximoKm(e.target.value)} placeholder="Ex: 50000" />
-            <Input label="Alertar após Data" type="date" value={proximaData} onChange={e => setProximaData(e.target.value)} />
+            <Select label="Tipo de Manutenção" value={tipo} onChange={e => setTipo(e.target.value as TipoManutencao)} options={TIPOS} />
+            <Input label="Alertar a partir de" type="date" value={proximaData} onChange={e => setProximaData(e.target.value)} required />
             <div style={{ display: 'flex', gap: 8 }}>
               <Button type="submit" fullWidth><Save size={16} /> Criar Alerta</Button>
               <Button variant="ghost" onClick={limparForm}><X size={16} /></Button>
@@ -222,8 +220,7 @@ export default function Manutencao() {
                   <div>
                     <p style={{ fontSize: 15, fontWeight: 600 }}>{tipoLabel[a.tipo]}</p>
                     <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>{a.veiculoApelido}</p>
-                    {a.alertarAposKm && <p style={{ fontSize: 12, color: 'var(--info)' }}>Após {a.alertarAposKm} km</p>}
-                    {a.alertarAposData && <p style={{ fontSize: 12, color: 'var(--info)' }}>Após {fmtData(a.alertarAposData)}</p>}
+                    <p style={{ fontSize: 12, color: 'var(--info)' }}>A partir de {fmtData(a.alertarAposData)}</p>
                   </div>
                   <button onClick={() => handleDesativarAlerta(a.veiculoId, a.id)}
                     style={{ padding: 6, background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--danger)', cursor: 'pointer' }}>

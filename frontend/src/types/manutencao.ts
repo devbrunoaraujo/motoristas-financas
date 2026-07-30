@@ -25,8 +25,7 @@ export interface ManutencaoResponse {
 
 export interface AlertaManutencaoRequest {
   tipo: TipoManutencao
-  alertarAposKm?: number
-  alertarAposData?: string
+  alertarAposData: string
 }
 
 export interface AlertaManutencaoResponse {
@@ -35,8 +34,7 @@ export interface AlertaManutencaoResponse {
   veiculoApelido: string
   tipo: TipoManutencao
   ativo: boolean
-  alertarAposKm?: number
-  alertarAposData?: string
+  alertarAposData: string
 }
 
 export interface DepreciacaoResponse {

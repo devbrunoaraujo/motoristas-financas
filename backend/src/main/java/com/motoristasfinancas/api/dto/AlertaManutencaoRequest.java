@@ -1,6 +1,6 @@
 package com.motoristasfinancas.api.dto;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import com.motoristasfinancas.api.model.enums.TipoManutencao;
 
@@ -10,6 +10,6 @@ public record AlertaManutencaoRequest(
     @NotNull(message = "Tipo é obrigatório")
     TipoManutencao tipo,
 
-    BigDecimal alertarAposKm,
-    java.time.LocalDate alertarAposData
+    @NotNull(message = "Data de alerta é obrigatória")
+    LocalDate alertarAposData
 ) {}

@@ -1,6 +1,5 @@
 package com.motoristasfinancas.api.model;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.motoristasfinancas.api.model.enums.TipoManutencao;
@@ -42,8 +41,6 @@ public class AlertaManutencao {
     @Column(nullable = false)
     private boolean ativo = true;
 
-    @Column(precision = 10, scale = 2)
-    private BigDecimal alertarAposKm;
-
+    @Column(nullable = false)
     private LocalDate alertarAposData;
 }
