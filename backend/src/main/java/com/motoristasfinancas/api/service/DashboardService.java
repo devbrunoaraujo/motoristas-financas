@@ -4,11 +4,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.motoristasfinancas.api.dto.DashboardResponse;
+import com.motoristasfinancas.api.dto.DiaResumo;
 import com.motoristasfinancas.api.model.Despesa;
 import com.motoristasfinancas.api.model.RegistroDia;
 import com.motoristasfinancas.api.repository.DespesaRepository;
@@ -74,6 +77,41 @@ public class DashboardService {
                 inicioSemana,
                 inicioMes
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<DiaResumo> getUltimosDias(Long usuarioId, int dias) {
+        LocalDate hoje = LocalDate.now();
+        LocalDate inicio = hoje.minusDays(dias - 1);
+
+        List<RegistroDia> registros = registroRepository.findByUsuarioIdAndDataBetween(usuarioId, inicio, hoje);
+
+        List<DiaResumo> resultado = new ArrayList<>();
+        for (int i = 0; i < dias; i++) {
+            LocalDate data = inicio.plusDays(i);
+            final LocalDate dataFinal = data;
+
+            List<RegistroDia> doDia = registros.stream()
+                    .filter(r -> r.getData().equals(dataFinal))
+                    .toList();
+
+            BigDecimal ganho = sumGanhoBruto(doDia);
+            BigDecimal combustivel = sumGastoCombustivel(doDia);
+            BigDecimal lucro = sumLucroLiquido(doDia);
+
+            BigDecimal percentualGanho = BigDecimal.ZERO;
+            BigDecimal percentualCombustivel = BigDecimal.ZERO;
+
+            BigDecimal total = ganho.add(combustivel);
+            if (total.compareTo(BigDecimal.ZERO) > 0) {
+                percentualGanho = ganho.multiply(BigDecimal.valueOf(100)).divide(total, 1, RoundingMode.HALF_UP);
+                percentualCombustivel = combustivel.multiply(BigDecimal.valueOf(100)).divide(total, 1, RoundingMode.HALF_UP);
+            }
+
+            resultado.add(new DiaResumo(data, ganho, combustivel, lucro, percentualGanho, percentualCombustivel));
+        }
+
+        return resultado;
     }
 
     private BigDecimal sumGanhoBruto(List<RegistroDia> registros) {

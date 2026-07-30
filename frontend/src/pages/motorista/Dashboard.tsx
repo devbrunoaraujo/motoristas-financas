@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { AreaChart, Area, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
+import { AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts'
 import * as dashboardService from '../../services/dashboardService'
 import type { DashboardResponse } from '../../types/dashboard'
+import type { DiaResumo } from '../../services/dashboardService'
 import { Card, StatCard, PageHeader } from '../../components/ui'
 import { TrendingUp, Fuel, Receipt, DollarSign, Gauge, BarChart3 } from 'lucide-react'
 
@@ -9,6 +10,7 @@ const COLORS = ['#00b894', '#e17055', '#fdcb6e', '#74b9ff', '#a29bfe']
 
 export default function Dashboard() {
   const [dados, setDados] = useState<DashboardResponse | null>(null)
+  const [ultimosDias, setUltimosDias] = useState<DiaResumo[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -17,8 +19,12 @@ export default function Dashboard() {
   async function carregarDashboard() {
     try {
       setCarregando(true)
-      const data = await dashboardService.getDashboard()
+      const [data, dias] = await Promise.all([
+        dashboardService.getDashboard(),
+        dashboardService.getUltimosDias(7)
+      ])
       setDados(data)
+      setUltimosDias(dias)
     } catch (err: any) {
       setErro('Erro ao carregar dashboard')
     } finally {
@@ -28,6 +34,11 @@ export default function Dashboard() {
 
   function formatarMoeda(valor: number) {
     return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  function formatarDataCurta(data: string) {
+    const d = new Date(data + 'T00:00:00')
+    return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' })
   }
 
   if (carregando) return <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-2xl)' }}>
@@ -49,6 +60,15 @@ export default function Dashboard() {
     { name: 'Lucro', value: Math.max(0, dados.lucroLiquidoMes) },
   ].filter(d => d.value > 0)
 
+  const barData = ultimosDias.map(dia => ({
+    name: formatarDataCurta(dia.data),
+    ganho: Number(dia.percentualGanho),
+    combustivel: Number(dia.percentualCombustivel),
+    ganhoValor: dia.ganhoBruto,
+    combustivelValor: dia.gastoCombustivel,
+    lucro: dia.lucroLiquido,
+  }))
+
   return (
     <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
       <PageHeader title="Dashboard" />
@@ -61,6 +81,67 @@ export default function Dashboard() {
         <StatCard title="Lucro Mês" value={formatarMoeda(dados.lucroLiquidoMes)} icon={<DollarSign size={20} />} color={dados.lucroLiquidoMes >= 0 ? 'var(--accent)' : 'var(--danger)'} />
         <StatCard title="KM Rodado" value={`${dados.kmTotalRodado.toFixed(1)} km`} icon={<Gauge size={20} />} color="var(--info)" />
       </div>
+
+      {/* Stacked Bar Chart - Timeline dos últimos dias */}
+      {barData.length > 0 && (
+        <Card style={{ marginBottom: 'var(--space-md)' }}>
+          <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 4 }}>Últimos 7 Dias</h3>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>Ganho bruto vs gasto combustível (%)</p>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={barData} barSize={28}>
+              <XAxis
+                dataKey="name"
+                tick={{ fill: '#a0a0c0', fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fill: '#a0a0c0', fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                domain={[0, 100]}
+                tickFormatter={(v) => `${v}%`}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                }}
+                formatter={(value, name) => {
+                  const entry = barData.find(b => b.ganho === value || b.combustivel === value)
+                  if (name === 'Ganho Bruto') {
+                    return [`${value}% (${formatarMoeda(entry?.ganhoValor || 0)})`, name]
+                  }
+                  return [`${value}% (${formatarMoeda(entry?.combustivelValor || 0)})`, name]
+                }}
+                labelFormatter={(label) => label}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 12, color: 'var(--text-secondary)' }}
+                iconType="circle"
+                iconSize={8}
+              />
+              <Bar
+                dataKey="ganho"
+                name="Ganho Bruto"
+                stackId="a"
+                fill="#00b894"
+                radius={[0, 0, 0, 0]}
+              />
+              <Bar
+                dataKey="combustivel"
+                name="Combustível"
+                stackId="a"
+                fill="#e17055"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
 
       {/* Area Chart */}
       <Card style={{ marginBottom: 'var(--space-md)' }}>
