@@ -1,16 +1,44 @@
 import { useState, useEffect } from 'react'
 import { AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts'
 import * as dashboardService from '../../services/dashboardService'
+import * as metaService from '../../services/metaService'
 import type { DashboardResponse } from '../../types/dashboard'
 import type { DiaResumo } from '../../services/dashboardService'
+import type { MetaProgresso } from '../../types/meta'
 import { Card, StatCard, PageHeader } from '../../components/ui'
-import { TrendingUp, Fuel, Receipt, DollarSign, Gauge, BarChart3 } from 'lucide-react'
+import { TrendingUp, Fuel, Receipt, DollarSign, Gauge, BarChart3, Target } from 'lucide-react'
 
 const COLORS = ['#00b894', '#e17055', '#fdcb6e', '#74b9ff', '#a29bfe']
+
+function ProgressBar({ label, realizado, meta, percentual, cor }: { label: string; realizado: number; meta: number; percentual: number; cor: string }) {
+  const pct = Math.min(percentual, 100)
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</span>
+        <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+      </div>
+      <div style={{ height: 8, background: 'var(--bg-input)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+        <div style={{
+          height: '100%',
+          width: `${pct}%`,
+          background: `linear-gradient(90deg, ${cor}, ${cor}aa)`,
+          borderRadius: 'var(--radius-full)',
+          transition: 'width 0.8s ease',
+        }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{realizado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+      </div>
+    </div>
+  )
+}
 
 export default function Dashboard() {
   const [dados, setDados] = useState<DashboardResponse | null>(null)
   const [ultimosDias, setUltimosDias] = useState<DiaResumo[]>([])
+  const [progresso, setProgresso] = useState<MetaProgresso | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
@@ -19,12 +47,14 @@ export default function Dashboard() {
   async function carregarDashboard() {
     try {
       setCarregando(true)
-      const [data, dias] = await Promise.all([
+      const [data, dias, prog] = await Promise.all([
         dashboardService.getDashboard(),
-        dashboardService.getUltimosDias(7)
+        dashboardService.getUltimosDias(7),
+        metaService.getProgresso()
       ])
       setDados(data)
       setUltimosDias(dias)
+      setProgresso(prog)
     } catch (err: any) {
       setErro('Erro ao carregar dashboard')
     } finally {
@@ -73,6 +103,19 @@ export default function Dashboard() {
     <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
       <PageHeader title="Dashboard" />
 
+      {/* Meta Progress */}
+      {progresso && (
+        <Card style={{ marginBottom: 'var(--space-md)', background: 'linear-gradient(135deg, rgba(0,184,148,0.05), rgba(162,155,254,0.05))' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'var(--space-md)' }}>
+            <Target size={18} color="var(--accent)" />
+            <h3 style={{ fontSize: 14, fontWeight: 600 }}>Metas de Lucro</h3>
+          </div>
+          <ProgressBar label="Diária" realizado={progresso.realizadoDiaria} meta={progresso.metaDiaria} percentual={progresso.percentualDiaria} cor="var(--info)" />
+          <ProgressBar label="Semanal" realizado={progresso.realizadoSemanal} meta={progresso.metaSemanal} percentual={progresso.percentualSemanal} cor="var(--accent)" />
+          <ProgressBar label="Mensal" realizado={progresso.realizadoMensal} meta={progresso.metaMensal} percentual={progresso.percentualMensal} cor="var(--purple)" />
+        </Card>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
         <StatCard title="Ganho Hoje" value={formatarMoeda(dados.ganhoBrutoDia)} icon={<TrendingUp size={20} />} color="var(--accent)" />
         <StatCard title="Ganho Mês" value={formatarMoeda(dados.ganhoBrutoMes)} icon={<BarChart3 size={20} />} color="var(--accent-light)" />
@@ -82,62 +125,26 @@ export default function Dashboard() {
         <StatCard title="KM Rodado" value={`${dados.kmTotalRodado.toFixed(1)} km`} icon={<Gauge size={20} />} color="var(--info)" />
       </div>
 
-      {/* Stacked Bar Chart - Timeline dos últimos dias */}
+      {/* Stacked Bar Chart */}
       {barData.length > 0 && (
         <Card style={{ marginBottom: 'var(--space-md)' }}>
           <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 4 }}>Últimos 7 Dias</h3>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>Ganho bruto vs gasto combustível (%)</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={barData} barSize={28}>
-              <XAxis
-                dataKey="name"
-                tick={{ fill: '#a0a0c0', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: '#a0a0c0', fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                domain={[0, 100]}
-                tickFormatter={(v) => `${v}%`}
-              />
+              <XAxis dataKey="name" tick={{ fill: '#a0a0c0', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: '#a0a0c0', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
               <Tooltip
-                contentStyle={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'var(--text-primary)',
-                  fontSize: 13,
-                }}
+                contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: 13 }}
                 formatter={(value, name) => {
                   const entry = barData.find(b => b.ganho === value || b.combustivel === value)
-                  if (name === 'Ganho Bruto') {
-                    return [`${value}% (${formatarMoeda(entry?.ganhoValor || 0)})`, name]
-                  }
+                  if (name === 'Ganho Bruto') return [`${value}% (${formatarMoeda(entry?.ganhoValor || 0)})`, name]
                   return [`${value}% (${formatarMoeda(entry?.combustivelValor || 0)})`, name]
                 }}
-                labelFormatter={(label) => label}
               />
-              <Legend
-                wrapperStyle={{ fontSize: 12, color: 'var(--text-secondary)' }}
-                iconType="circle"
-                iconSize={8}
-              />
-              <Bar
-                dataKey="ganho"
-                name="Ganho Bruto"
-                stackId="a"
-                fill="#00b894"
-                radius={[0, 0, 0, 0]}
-              />
-              <Bar
-                dataKey="combustivel"
-                name="Combustível"
-                stackId="a"
-                fill="#e17055"
-                radius={[4, 4, 0, 0]}
-              />
+              <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-secondary)' }} iconType="circle" iconSize={8} />
+              <Bar dataKey="ganho" name="Ganho Bruto" stackId="a" fill="#00b894" />
+              <Bar dataKey="combustivel" name="Combustível" stackId="a" fill="#e17055" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -155,10 +162,7 @@ export default function Dashboard() {
               </linearGradient>
             </defs>
             <XAxis dataKey="name" tick={{ fill: '#a0a0c0', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <Tooltip
-              contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-              formatter={(value) => [formatarMoeda(Number(value)), '']}
-            />
+            <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }} formatter={(value) => [formatarMoeda(Number(value)), '']} />
             <Area type="monotone" dataKey="value" stroke="#00b894" fill="url(#colorValue)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
@@ -174,10 +178,7 @@ export default function Dashboard() {
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={4} dataKey="value">
                   {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip
-                  contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}
-                  formatter={(value) => [formatarMoeda(Number(value)), '']}
-                />
+                <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }} formatter={(value) => [formatarMoeda(Number(value)), '']} />
               </PieChart>
             </ResponsiveContainer>
             <div style={{ flex: 1 }}>
