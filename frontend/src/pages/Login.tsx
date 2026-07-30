@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
@@ -8,8 +8,7 @@ export default function Login() {
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
 
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const { login, usuario } = useAuth()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -18,12 +17,18 @@ export default function Login() {
 
     try {
       await login({ email, senha })
-      navigate('/')
     } catch (err: any) {
       setErro(err.response?.data?.mensagem || 'Erro ao fazer login')
     } finally {
       setCarregando(false)
     }
+  }
+
+  if (usuario) {
+    if (usuario.role === 'ADMIN') {
+      return <Navigate to="/admin" replace />
+    }
+    return <Navigate to="/dashboard" replace />
   }
 
   return (

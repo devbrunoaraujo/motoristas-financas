@@ -47,6 +47,15 @@ function NavBar() {
   )
 }
 
+function HomeRedirect() {
+  const { isAuthenticated, isLoading, usuario } = useAuth()
+
+  if (isLoading) return <div>Carregando...</div>
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (usuario?.role === 'ADMIN') return <Navigate to="/admin" replace />
+  return <Navigate to="/dashboard" replace />
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -125,8 +134,8 @@ function App() {
             }
           />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<HomeRedirect />} />
+          <Route path="*" element={<HomeRedirect />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
