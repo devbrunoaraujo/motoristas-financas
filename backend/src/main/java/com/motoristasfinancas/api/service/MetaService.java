@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -45,14 +46,10 @@ public class MetaService {
                 .orElse(null);
 
         if (meta != null) {
-            meta.setMetaDiaria(request.metaDiaria());
-            meta.setMetaSemanal(request.metaSemanal());
             meta.setMetaMensal(request.metaMensal());
         } else {
             meta = new Meta();
             meta.setUsuario(usuario);
-            meta.setMetaDiaria(request.metaDiaria());
-            meta.setMetaSemanal(request.metaSemanal());
             meta.setMetaMensal(request.metaMensal());
             meta.setVigenteDesde(LocalDate.now());
         }
@@ -74,6 +71,21 @@ public class MetaService {
         LocalDate inicioSemana = hoje.with(DayOfWeek.MONDAY);
         LocalDate inicioMes = hoje.withDayOfMonth(1);
 
+        // Dias restantes no mês (incluindo hoje)
+        LocalDate fimMes = hoje.withDayOfMonth(hoje.lengthOfMonth());
+        long diasNoMes = ChronoUnit.DAYS.between(inicioMes, fimMes) + 1;
+
+        // Dias restantes na semana (incluindo hoje)
+        LocalDate fimSemana = hoje.with(DayOfWeek.SUNDAY);
+        long diasNaSemana = ChronoUnit.DAYS.between(inicioSemana, fimSemana) + 1;
+
+        // Metas derivadas da mensal
+        BigDecimal metaMensal = meta.getMetaMensal();
+        BigDecimal metaSemanal = metaMensal.multiply(BigDecimal.valueOf(diasNaSemana))
+                .divide(BigDecimal.valueOf(diasNoMes), 2, RoundingMode.HALF_UP);
+        BigDecimal metaDiaria = metaMensal.divide(BigDecimal.valueOf(diasNoMes), 2, RoundingMode.HALF_UP);
+
+        // Realizados
         List<RegistroDia> registrosHoje = registroRepository.findByUsuarioIdAndDataBetween(usuarioId, hoje, hoje);
         List<RegistroDia> registrosSemana = registroRepository.findByUsuarioIdAndDataBetween(usuarioId, inicioSemana, hoje);
         List<RegistroDia> registrosMes = registroRepository.findByUsuarioIdAndDataBetween(usuarioId, inicioMes, hoje);
@@ -90,14 +102,10 @@ public class MetaService {
                 .map(RegistroDia::getLucroLiquido)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal percentualDiaria = calcularPercentual(realizadoDiaria, meta.getMetaDiaria());
-        BigDecimal percentualSemanal = calcularPercentual(realizadoSemanal, meta.getMetaSemanal());
-        BigDecimal percentualMensal = calcularPercentual(realizadoMensal, meta.getMetaMensal());
-
         return new MetaProgresso(
-                meta.getMetaDiaria(), realizadoDiaria, percentualDiaria,
-                meta.getMetaSemanal(), realizadoSemanal, percentualSemanal,
-                meta.getMetaMensal(), realizadoMensal, percentualMensal
+                metaDiaria, realizadoDiaria, calcularPercentual(realizadoDiaria, metaDiaria),
+                metaSemanal, realizadoSemanal, calcularPercentual(realizadoSemanal, metaSemanal),
+                metaMensal, realizadoMensal, calcularPercentual(realizadoMensal, metaMensal)
         );
     }
 
@@ -110,8 +118,6 @@ public class MetaService {
     private MetaResponse toResponse(Meta meta) {
         return new MetaResponse(
                 meta.getId(),
-                meta.getMetaDiaria(),
-                meta.getMetaSemanal(),
                 meta.getMetaMensal(),
                 meta.getVigenteDesde()
         );

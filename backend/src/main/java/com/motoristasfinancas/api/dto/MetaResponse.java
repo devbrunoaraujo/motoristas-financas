@@ -5,8 +5,6 @@ import java.time.LocalDate;
 
 public record MetaResponse(
     Long id,
-    BigDecimal metaDiaria,
-    BigDecimal metaSemanal,
     BigDecimal metaMensal,
     LocalDate vigenteDesde
 ) {}

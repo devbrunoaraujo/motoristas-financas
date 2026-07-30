@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import * as metaService from '../../services/metaService'
-import type { MetaRequest, MetaResponse } from '../../types/meta'
+import type { MetaResponse } from '../../types/meta'
 import { Card, Button, Input, PageHeader } from '../../components/ui'
-import { Target, Save, TrendingUp, Calendar, BarChart3 } from 'lucide-react'
+import { Target, Save } from 'lucide-react'
 
 export default function Metas() {
   const [meta, setMeta] = useState<MetaResponse | null>(null)
@@ -10,8 +10,6 @@ export default function Metas() {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
 
-  const [metaDiaria, setMetaDiaria] = useState('')
-  const [metaSemanal, setMetaSemanal] = useState('')
   const [metaMensal, setMetaMensal] = useState('')
 
   useEffect(() => { carregarMeta() }, [])
@@ -21,24 +19,15 @@ export default function Metas() {
       setCarregando(true)
       const data = await metaService.getMeta()
       setMeta(data)
-      if (data) {
-        setMetaDiaria(String(data.metaDiaria))
-        setMetaSemanal(String(data.metaSemanal))
-        setMetaMensal(String(data.metaMensal))
-      }
+      if (data) setMetaMensal(String(data.metaMensal))
     } catch { setErro('Erro ao carregar metas') } finally { setCarregando(false) }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setErro(''); setSucesso('')
-    const dados: MetaRequest = {
-      metaDiaria: Number(metaDiaria),
-      metaSemanal: Number(metaSemanal),
-      metaMensal: Number(metaMensal),
-    }
     try {
-      await metaService.criarOuAtualizarMeta(dados)
-      setSucesso('Metas salvas com sucesso!')
+      await metaService.criarOuAtualizarMeta({ metaMensal: Number(metaMensal) })
+      setSucesso('Meta salva com sucesso!')
       carregarMeta()
     } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
   }
@@ -50,6 +39,11 @@ export default function Metas() {
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
   </div>
 
+  // Calcular dias no mês para mostrar a meta diária estimada
+  const hoje = new Date()
+  const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate()
+  const metaDiariaEstimada = metaMensal ? Number(metaMensal) / diasNoMes : 0
+
   return (
     <div style={{ padding: 'var(--space-md)', maxWidth: 500, margin: '0 auto' }}>
       <PageHeader title="Metas" />
@@ -59,58 +53,51 @@ export default function Metas() {
 
       <Card>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 'var(--space-lg)' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-md)', background: 'rgba(0,184,148,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Target size={22} color="var(--accent)" />
+          <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', background: 'linear-gradient(135deg, rgba(0,184,148,0.15), rgba(162,155,254,0.15))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Target size={24} color="var(--accent)" />
           </div>
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>Definir Metas de Lucro</h2>
-            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Configure suas metas de lucro líquido</p>
+            <h2 style={{ fontSize: 17, fontWeight: 600 }}>Meta Mensal de Lucro</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>O sistema calcula semanal e diária automaticamente</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 'var(--space-md)', padding: '12px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
-            <Calendar size={18} color="var(--info)" />
-            <div style={{ flex: 1 }}>
-              <Input label="Meta Diária (R$)" type="number" step="0.01" min="0.01" value={metaDiaria} onChange={e => setMetaDiaria(e.target.value)} required placeholder="Ex: 150.00" style={{ marginBottom: 0 }} />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 'var(--space-md)', padding: '12px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
-            <TrendingUp size={18} color="var(--accent)" />
-            <div style={{ flex: 1 }}>
-              <Input label="Meta Semanal (R$)" type="number" step="0.01" min="0.01" value={metaSemanal} onChange={e => setMetaSemanal(e.target.value)} required placeholder="Ex: 1000.00" style={{ marginBottom: 0 }} />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 'var(--space-lg)', padding: '12px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
-            <BarChart3 size={18} color="var(--purple)" />
-            <div style={{ flex: 1 }}>
-              <Input label="Meta Mensal (R$)" type="number" step="0.01" min="0.01" value={metaMensal} onChange={e => setMetaMensal(e.target.value)} required placeholder="Ex: 4000.00" style={{ marginBottom: 0 }} />
-            </div>
-          </div>
+          <Input
+            label="Quanto você quer lucrar por mês?"
+            type="number"
+            step="0.01"
+            min="0.01"
+            value={metaMensal}
+            onChange={e => setMetaMensal(e.target.value)}
+            required
+            placeholder="Ex: 4000.00"
+          />
 
           <Button type="submit" fullWidth size="lg">
-            <Save size={16} /> {meta ? 'Atualizar Metas' : 'Salvar Metas'}
+            <Save size={16} /> {meta ? 'Atualizar Meta' : 'Salvar Meta'}
           </Button>
         </form>
       </Card>
 
-      {meta && (
+      {metaMensal && Number(metaMensal) > 0 && (
         <Card style={{ marginTop: 'var(--space-md)', animation: 'fadeIn 0.3s ease' }}>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>Metas atuais (desde {new Date(meta.vigenteDesde + 'T00:00:00').toLocaleDateString('pt-BR')})</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 'var(--space-md)' }}>Metas calculadas automaticamente</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-            <div style={{ textAlign: 'center', padding: 12, background: 'rgba(116,185,255,0.05)', borderRadius: 'var(--radius-md)' }}>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Diária</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--info)' }}>{fmtMoeda(meta.metaDiaria)}</p>
+            <div style={{ textAlign: 'center', padding: 14, background: 'rgba(116,185,255,0.08)', borderRadius: 'var(--radius-md)' }}>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Diária</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--info)' }}>{fmtMoeda(metaDiariaEstimada)}</p>
+              <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{diasNoMes} dias</p>
             </div>
-            <div style={{ textAlign: 'center', padding: 12, background: 'rgba(0,184,148,0.05)', borderRadius: 'var(--radius-md)' }}>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Semanal</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)' }}>{fmtMoeda(meta.metaSemanal)}</p>
+            <div style={{ textAlign: 'center', padding: 14, background: 'rgba(0,184,148,0.08)', borderRadius: 'var(--radius-md)' }}>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Semanal</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--accent)' }}>{fmtMoeda(metaDiariaEstimada * 7)}</p>
+              <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>7 dias</p>
             </div>
-            <div style={{ textAlign: 'center', padding: 12, background: 'rgba(162,155,254,0.05)', borderRadius: 'var(--radius-md)' }}>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Mensal</p>
-              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--purple)' }}>{fmtMoeda(meta.metaMensal)}</p>
+            <div style={{ textAlign: 'center', padding: 14, background: 'rgba(162,155,254,0.08)', borderRadius: 'var(--radius-md)' }}>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>Mensal</p>
+              <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--purple)' }}>{fmtMoeda(Number(metaMensal))}</p>
+              <p style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{diasNoMes} dias</p>
             </div>
           </div>
         </Card>

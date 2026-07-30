@@ -32,12 +32,6 @@ public class Meta {
     private Usuario usuario;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal metaDiaria;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal metaSemanal;
-
-    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal metaMensal;
 
     @Column(nullable = false)

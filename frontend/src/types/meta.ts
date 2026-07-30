@@ -1,13 +1,9 @@
 export interface MetaRequest {
-  metaDiaria: number
-  metaSemanal: number
   metaMensal: number
 }
 
 export interface MetaResponse {
   id: number
-  metaDiaria: number
-  metaSemanal: number
   metaMensal: number
   vigenteDesde: string
 }
