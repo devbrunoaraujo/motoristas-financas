@@ -1,7 +1,5 @@
 import axios from 'axios'
 
-// Toda chamada HTTP para o backend deve passar por esta instância,
-// nunca chamar fetch/axios diretamente dentro de componentes.
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080'
 })
@@ -13,3 +11,15 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('usuario')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
