@@ -6,6 +6,7 @@ import Cadastro from './pages/Cadastro'
 import Veiculos from './pages/motorista/Veiculos'
 import Combustivel from './pages/motorista/Combustivel'
 import RegistroDia from './pages/motorista/RegistroDia'
+import Despesas from './pages/motorista/Despesas'
 
 function NavBar() {
   const { isAuthenticated, logout } = useAuth()
@@ -17,6 +18,7 @@ function NavBar() {
       <Link to="/registros">Registro do Dia</Link>
       <Link to="/veiculos">Veículos</Link>
       <Link to="/combustivel">Combustível</Link>
+      <Link to="/despesas">Despesas</Link>
       <div style={{ marginLeft: 'auto' }}>
         <button onClick={logout} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', cursor: 'pointer' }}>
           Sair
@@ -55,6 +57,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Combustivel />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/despesas"
+            element={
+              <PrivateRoute>
+                <Despesas />
               </PrivateRoute>
             }
           />
