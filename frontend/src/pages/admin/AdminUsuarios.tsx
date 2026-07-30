@@ -26,6 +26,8 @@ export default function AdminUsuarios() {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [role, setRole] = useState<Role>('MOTORISTA')
+  const [alterandoPlano, setAlterandoPlano] = useState<number | null>(null)
+  const [planoParaAlterar, setPlanoParaAlterar] = useState<number>(0)
 
   useEffect(() => { carregarDados() }, [])
 
@@ -75,6 +77,12 @@ export default function AdminUsuarios() {
     if (!planoSelecionado) { setErro('Selecione um plano'); return }
     try { await adminService.confirmarPagamento({ usuarioId, planoId: planoSelecionado }); setConfirmando(null); carregarDados() }
     catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao confirmar') }
+  }
+
+  async function handleAlterarPlano(usuarioId: number) {
+    if (!planoParaAlterar) { setErro('Selecione um plano'); return }
+    try { await adminService.alterarPlano(usuarioId, planoParaAlterar); setAlterandoPlano(null); setSucesso('Plano alterado!'); carregarDados() }
+    catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao alterar plano') }
   }
 
   function fmtData(d?: string) { return d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '—' }
@@ -246,6 +254,25 @@ export default function AdminUsuarios() {
                         <CreditCard size={14} /> Liberar Plano
                       </Button>
                     )
+                  )}
+
+                  {/* Alterar plano */}
+                  {alterandoPlano === u.id ? (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <select
+                        value={planoParaAlterar}
+                        onChange={e => setPlanoParaAlterar(Number(e.target.value))}
+                        style={{ padding: '6px 10px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)', fontSize: 13 }}
+                      >
+                        {planos.map(p => <option key={p.id} value={p.id}>{p.nome} — R$ {p.valorMensal}</option>)}
+                      </select>
+                      <Button size="sm" onClick={() => handleAlterarPlano(u.id)}><Check size={14} /> Confirmar</Button>
+                      <Button size="sm" variant="ghost" onClick={() => setAlterandoPlano(null)}>Cancelar</Button>
+                    </div>
+                  ) : (
+                    <Button size="sm" variant="ghost" onClick={() => { setAlterandoPlano(u.id); setPlanoParaAlterar(planos[0]?.id || 0) }}>
+                      <CreditCard size={14} /> Alterar Plano
+                    </Button>
                   )}
                 </div>
               </Card>

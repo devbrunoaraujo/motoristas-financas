@@ -20,9 +20,12 @@ public class ManutencaoService {
 
     private final ManutencaoRepository manutencaoRepository;
     private final VeiculoRepository veiculoRepository;
+    private final PlanoAcessoService planoAcessoService;
 
     @Transactional(readOnly = true)
     public List<ManutencaoResponse> listarPorVeiculo(Long usuarioId, Long veiculoId) {
+        planoAcessoService.exigirPro(usuarioId);
+
         veiculoRepository.findByIdAndUsuarioId(veiculoId, usuarioId)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
 
@@ -34,6 +37,8 @@ public class ManutencaoService {
 
     @Transactional(readOnly = true)
     public List<ManutencaoResponse> listarTodos(Long usuarioId) {
+        planoAcessoService.exigirPro(usuarioId);
+
         return manutencaoRepository.findByVeiculoUsuarioIdOrderByDataDesc(usuarioId)
                 .stream()
                 .map(this::toResponse)
@@ -42,6 +47,8 @@ public class ManutencaoService {
 
     @Transactional
     public ManutencaoResponse criar(Long usuarioId, Long veiculoId, ManutencaoRequest request) {
+        planoAcessoService.exigirPro(usuarioId);
+
         Veiculo veiculo = veiculoRepository.findByIdAndUsuarioId(veiculoId, usuarioId)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
 
@@ -61,6 +68,8 @@ public class ManutencaoService {
 
     @Transactional
     public void excluir(Long usuarioId, Long manutencaoId) {
+        planoAcessoService.exigirPro(usuarioId);
+
         Manutencao manutencao = manutencaoRepository.findById(manutencaoId)
                 .orElseThrow(() -> new RuntimeException("Manutenção não encontrada"));
 

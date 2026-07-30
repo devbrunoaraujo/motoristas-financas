@@ -5,6 +5,10 @@ export interface VeiculoRequest {
   placa?: string
   tipoCombustivel: TipoCombustivel
   autonomia: number
+  valorCompra?: number
+  valorRevendaEstimado?: number
+  dataAquisicao?: string
+  kmAtual?: number
 }
 
 export interface VeiculoResponse {
@@ -14,4 +18,8 @@ export interface VeiculoResponse {
   tipoCombustivel: TipoCombustivel
   autonomia: number
   ativo: boolean
+  valorCompra?: number
+  valorRevendaEstimado?: number
+  dataAquisicao?: string
+  kmAtual?: number
 }

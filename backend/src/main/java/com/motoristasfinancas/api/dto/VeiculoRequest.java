@@ -1,6 +1,7 @@
 package com.motoristasfinancas.api.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import com.motoristasfinancas.api.model.enums.TipoCombustivel;
 
@@ -22,5 +23,10 @@ public record VeiculoRequest(
 
     @NotNull(message = "Autonomia é obrigatória")
     @DecimalMin(value = "0.1", message = "Autonomia deve ser maior que zero")
-    BigDecimal autonomia
+    BigDecimal autonomia,
+
+    BigDecimal valorCompra,
+    BigDecimal valorRevendaEstimado,
+    LocalDate dataAquisicao,
+    BigDecimal kmAtual
 ) {}

@@ -12,8 +12,20 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.motoristasfinancas.api.service.PlanoAcessoService;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(PlanoAcessoService.PlanoIncompativelException.class)
+    public ResponseEntity<Map<String, Object>> handlePlanoIncompativel(PlanoAcessoService.PlanoIncompativelException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("status", 403);
+        body.put("mensagem", ex.getMessage());
+        body.put("tipoPlanoRequerido", "PRO");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {

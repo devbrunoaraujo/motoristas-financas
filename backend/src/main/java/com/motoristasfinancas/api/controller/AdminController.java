@@ -75,6 +75,15 @@ public class AdminController {
         return ResponseEntity.ok(adminService.confirmarPagamento(request, adminId));
     }
 
+    @PutMapping("/usuarios/{id}/plano/{planoId}")
+    public ResponseEntity<AssinaturaResponse> alterarPlano(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id,
+            @PathVariable Long planoId) {
+        Long adminId = getUsuarioId(user);
+        return ResponseEntity.ok(adminService.alterarPlano(id, planoId, adminId));
+    }
+
     private Long getUsuarioId(User user) {
         return usuarioRepository.findByEmail(user.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"))

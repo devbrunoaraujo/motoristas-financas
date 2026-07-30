@@ -19,8 +19,7 @@ public class VeiculoService {
 
     private final VeiculoRepository veiculoRepository;
     private final UsuarioRepository usuarioRepository;
-
-    private static final int LIMITE_VEICULOS_BASICO = 1;
+    private final PlanoAcessoService planoAcessoService;
 
     public List<VeiculoResponse> listar(Long usuarioId) {
         return veiculoRepository.findByUsuarioIdAndAtivoTrue(usuarioId)
@@ -34,8 +33,9 @@ public class VeiculoService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
         long veiculosAtivos = veiculoRepository.countByUsuarioIdAndAtivoTrue(usuarioId);
-        if (veiculosAtivos >= LIMITE_VEICULOS_BASICO) {
-            throw new RuntimeException("Limite de veículos atingido. Faça upgrade do seu plano.");
+        int limite = getLimiteVeiculos(usuarioId);
+        if (veiculosAtivos >= limite) {
+            throw new RuntimeException("Limite de veículos atingido (" + limite + "). Faça upgrade do seu plano.");
         }
 
         Veiculo veiculo = new Veiculo();
@@ -44,6 +44,10 @@ public class VeiculoService {
         veiculo.setPlaca(request.placa());
         veiculo.setTipoCombustivel(request.tipoCombustivel());
         veiculo.setAutonomia(request.autonomia());
+        veiculo.setValorCompra(request.valorCompra());
+        veiculo.setValorRevendaEstimado(request.valorRevendaEstimado());
+        veiculo.setDataAquisicao(request.dataAquisicao());
+        veiculo.setKmAtual(request.kmAtual());
         veiculo.setAtivo(true);
 
         veiculo = veiculoRepository.save(veiculo);
@@ -58,6 +62,10 @@ public class VeiculoService {
         veiculo.setPlaca(request.placa());
         veiculo.setTipoCombustivel(request.tipoCombustivel());
         veiculo.setAutonomia(request.autonomia());
+        veiculo.setValorCompra(request.valorCompra());
+        veiculo.setValorRevendaEstimado(request.valorRevendaEstimado());
+        veiculo.setDataAquisicao(request.dataAquisicao());
+        veiculo.setKmAtual(request.kmAtual());
 
         veiculo = veiculoRepository.save(veiculo);
         return toResponse(veiculo);
@@ -71,6 +79,13 @@ public class VeiculoService {
         veiculoRepository.save(veiculo);
     }
 
+    private int getLimiteVeiculos(Long usuarioId) {
+        String plano = planoAcessoService.getPlanoAtual(usuarioId);
+        if (plano.contains("PREMIUM")) return Integer.MAX_VALUE;
+        if (plano.contains("PRO")) return 3;
+        return 1; // Básico e Trial
+    }
+
     private VeiculoResponse toResponse(Veiculo veiculo) {
         return new VeiculoResponse(
                 veiculo.getId(),
@@ -78,7 +93,11 @@ public class VeiculoService {
                 veiculo.getPlaca(),
                 veiculo.getTipoCombustivel(),
                 veiculo.getAutonomia(),
-                veiculo.isAtivo()
+                veiculo.isAtivo(),
+                veiculo.getValorCompra(),
+                veiculo.getValorRevendaEstimado(),
+                veiculo.getDataAquisicao(),
+                veiculo.getKmAtual()
         );
     }
 }

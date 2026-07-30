@@ -133,6 +133,34 @@ public class AdminService {
     }
 
     @Transactional
+    public AssinaturaResponse alterarPlano(Long usuarioId, Long planoId, Long adminId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        Plano plano = planoRepository.findById(planoId)
+                .orElseThrow(() -> new RuntimeException("Plano não encontrado"));
+
+        Usuario admin = usuarioRepository.findById(adminId)
+                .orElseThrow(() -> new RuntimeException("Admin não encontrado"));
+
+        Assinatura assinatura = new Assinatura();
+        assinatura.setUsuario(usuario);
+        assinatura.setPlano(plano);
+        assinatura.setStatus(StatusAssinatura.ATIVA);
+        assinatura.setDataInicio(LocalDate.now());
+        assinatura.setDataExpiracao(LocalDate.now().plusDays(30));
+        assinatura.setConfirmadoPor(admin);
+        assinatura.setConfirmadoEm(LocalDateTime.now());
+
+        assinatura = assinaturaRepository.save(assinatura);
+
+        usuario.setStatus(StatusUsuario.ATIVO);
+        usuarioRepository.save(usuario);
+
+        return toAssinaturaResponse(assinatura);
+    }
+
+    @Transactional
     public AssinaturaResponse confirmarPagamento(ConfirmarPagamentoRequest request, Long adminId) {
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));

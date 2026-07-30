@@ -20,9 +20,12 @@ public class AlertaManutencaoService {
 
     private final AlertaManutencaoRepository alertaRepository;
     private final VeiculoRepository veiculoRepository;
+    private final PlanoAcessoService planoAcessoService;
 
     @Transactional(readOnly = true)
     public List<AlertaManutencaoResponse> listarAtivos(Long usuarioId) {
+        planoAcessoService.exigirPro(usuarioId);
+
         return alertaRepository.findByVeiculoUsuarioIdAndAtivoTrue(usuarioId)
                 .stream()
                 .map(this::toResponse)
@@ -31,6 +34,8 @@ public class AlertaManutencaoService {
 
     @Transactional
     public AlertaManutencaoResponse criar(Long usuarioId, Long veiculoId, AlertaManutencaoRequest request) {
+        planoAcessoService.exigirPro(usuarioId);
+
         Veiculo veiculo = veiculoRepository.findByIdAndUsuarioId(veiculoId, usuarioId)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
 
@@ -47,6 +52,8 @@ public class AlertaManutencaoService {
 
     @Transactional
     public void desativar(Long usuarioId, Long alertaId) {
+        planoAcessoService.exigirPro(usuarioId);
+
         AlertaManutencao alerta = alertaRepository.findById(alertaId)
                 .orElseThrow(() -> new RuntimeException("Alerta não encontrado"));
 

@@ -5,7 +5,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +20,12 @@ import lombok.RequiredArgsConstructor;
 public class DepreciacaoService {
 
     private final VeiculoRepository veiculoRepository;
+    private final PlanoAcessoService planoAcessoService;
 
     @Transactional(readOnly = true)
     public List<DepreciacaoResponse> calcularTodos(Long usuarioId) {
+        planoAcessoService.exigirPro(usuarioId);
+
         return veiculoRepository.findByUsuarioIdAndAtivoTrue(usuarioId)
                 .stream()
                 .map(this::calcular)
@@ -32,6 +34,8 @@ public class DepreciacaoService {
 
     @Transactional(readOnly = true)
     public DepreciacaoResponse calcularPorVeiculo(Long usuarioId, Long veiculoId) {
+        planoAcessoService.exigirPro(usuarioId);
+
         Veiculo veiculo = veiculoRepository.findByIdAndUsuarioId(veiculoId, usuarioId)
                 .orElseThrow(() -> new RuntimeException("Veículo não encontrado"));
         return calcular(veiculo);
@@ -68,7 +72,6 @@ public class DepreciacaoService {
 
         BigDecimal depreciacaoDiaria = depreciacaoTotal.divide(BigDecimal.valueOf(dias), 4, RoundingMode.HALF_UP);
 
-        // Depreciação acumulada = diária × dias desde aquisição
         BigDecimal depreciacaoAcumulada = depreciacaoDiaria.multiply(BigDecimal.valueOf(dias));
         if (depreciacaoAcumulada.compareTo(depreciacaoTotal) > 0) {
             depreciacaoAcumulada = depreciacaoTotal;

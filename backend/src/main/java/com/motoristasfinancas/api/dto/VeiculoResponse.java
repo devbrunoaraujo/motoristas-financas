@@ -1,6 +1,7 @@
 package com.motoristasfinancas.api.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import com.motoristasfinancas.api.model.enums.TipoCombustivel;
 
@@ -10,5 +11,9 @@ public record VeiculoResponse(
     String placa,
     TipoCombustivel tipoCombustivel,
     BigDecimal autonomia,
-    boolean ativo
+    boolean ativo,
+    BigDecimal valorCompra,
+    BigDecimal valorRevendaEstimado,
+    LocalDate dataAquisicao,
+    BigDecimal kmAtual
 ) {}

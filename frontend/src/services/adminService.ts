@@ -36,6 +36,11 @@ export async function confirmarPagamento(dados: ConfirmarPagamentoRequest): Prom
   return response.data
 }
 
+export async function alterarPlano(usuarioId: number, planoId: number): Promise<Assinatura> {
+  const response = await api.put<Assinatura>(`/admin/usuarios/${usuarioId}/plano/${planoId}`)
+  return response.data
+}
+
 export async function listarPlanos(): Promise<Plano[]> {
   const response = await api.get<Plano[]>('/admin/planos')
   return response.data
