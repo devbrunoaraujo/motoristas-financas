@@ -6,6 +6,7 @@ import type { DashboardResponse } from '../../types/dashboard'
 import type { DiaResumo } from '../../services/dashboardService'
 import type { MetaProgresso } from '../../types/meta'
 import { Card, StatCard, PageHeader } from '../../components/ui'
+import TrialCard from '../../components/TrialCard'
 import { TrendingUp, Fuel, Receipt, DollarSign, Gauge, BarChart3, Target } from 'lucide-react'
 
 const COLORS = ['#00b894', '#e17055', '#fdcb6e', '#74b9ff', '#a29bfe']
@@ -102,6 +103,8 @@ export default function Dashboard() {
   return (
     <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
       <PageHeader title="Dashboard" />
+
+      <TrialCard />
 
       {/* Meta Progress */}
       {progresso && (

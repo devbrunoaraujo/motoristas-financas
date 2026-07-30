@@ -56,3 +56,34 @@ export interface ConfirmarPagamentoRequest {
   usuarioId: number
   planoId: number
 }
+
+export interface AdminCriarUsuarioRequest {
+  nome: string
+  email: string
+  senha: string
+  role: Role
+}
+
+export interface AdminEditarUsuarioRequest {
+  nome: string
+  email: string
+  role: Role
+}
+
+export interface TrialInfo {
+  diasRestantes: number
+  dataFimTrial: string
+  expirado: boolean
+  whatsappAdmin: string
+}
+
+export interface Configuracao {
+  id: number
+  chave: string
+  valor: string
+  descricao: string
+}
+
+export interface ConfiguracaoRequest {
+  valor: string
+}

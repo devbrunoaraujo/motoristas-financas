@@ -13,7 +13,8 @@ import Metas from './pages/motorista/Metas'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsuarios from './pages/admin/AdminUsuarios'
 import AdminPlanos from './pages/admin/AdminPlanos'
-import { LayoutDashboard, Calendar, Car, Receipt, Target, Users, CreditCard, LogOut } from 'lucide-react'
+import Configuracoes from './pages/admin/Configuracoes'
+import { LayoutDashboard, Calendar, Car, Receipt, Target, Users, CreditCard, Settings, LogOut } from 'lucide-react'
 
 function NavBar() {
   const { isAuthenticated, usuario, logout } = useAuth()
@@ -34,6 +35,7 @@ function NavBar() {
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/admin/usuarios', icon: Users, label: 'Usuários' },
     { to: '/admin/planos', icon: CreditCard, label: 'Planos' },
+    { to: '/admin/configuracoes', icon: Settings, label: 'Config' },
   ]
 
   const links = isAdmin ? adminLinks : motoristaLinks
@@ -188,6 +190,7 @@ function App() {
             <Route path="/admin" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
             <Route path="/admin/usuarios" element={<PrivateRoute><AdminUsuarios /></PrivateRoute>} />
             <Route path="/admin/planos" element={<PrivateRoute><AdminPlanos /></PrivateRoute>} />
+            <Route path="/admin/configuracoes" element={<PrivateRoute><Configuracoes /></PrivateRoute>} />
 
             <Route path="/" element={<HomeRedirect />} />
             <Route path="*" element={<HomeRedirect />} />

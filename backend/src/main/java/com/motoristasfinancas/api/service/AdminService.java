@@ -3,21 +3,28 @@ package com.motoristasfinancas.api.service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.motoristasfinancas.api.dto.AdminCriarUsuarioRequest;
 import com.motoristasfinancas.api.dto.AdminDashboardResponse;
+import com.motoristasfinancas.api.dto.AdminEditarUsuarioRequest;
 import com.motoristasfinancas.api.dto.AdminUsuarioResponse;
 import com.motoristasfinancas.api.dto.AssinaturaResponse;
 import com.motoristasfinancas.api.dto.ConfirmarPagamentoRequest;
+import com.motoristasfinancas.api.dto.TrialInfoResponse;
 import com.motoristasfinancas.api.model.Assinatura;
 import com.motoristasfinancas.api.model.Plano;
 import com.motoristasfinancas.api.model.Usuario;
+import com.motoristasfinancas.api.model.enums.Role;
 import com.motoristasfinancas.api.model.enums.StatusAssinatura;
 import com.motoristasfinancas.api.model.enums.StatusUsuario;
 import com.motoristasfinancas.api.repository.AssinaturaRepository;
+import com.motoristasfinancas.api.repository.ConfiguracaoRepository;
 import com.motoristasfinancas.api.repository.PlanoRepository;
 import com.motoristasfinancas.api.repository.UsuarioRepository;
 
@@ -30,6 +37,8 @@ public class AdminService {
     private final UsuarioRepository usuarioRepository;
     private final PlanoRepository planoRepository;
     private final AssinaturaRepository assinaturaRepository;
+    private final ConfiguracaoRepository configuracaoRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public AdminDashboardResponse getDashboard() {
@@ -72,6 +81,58 @@ public class AdminService {
     }
 
     @Transactional
+    public AdminUsuarioResponse criarUsuario(AdminCriarUsuarioRequest request) {
+        if (usuarioRepository.existsByEmail(request.email())) {
+            throw new RuntimeException("Email já cadastrado");
+        }
+
+        Usuario usuario = new Usuario();
+        usuario.setNome(request.nome());
+        usuario.setEmail(request.email());
+        usuario.setSenhaHash(passwordEncoder.encode(request.senha()));
+        usuario.setRole(request.role());
+        usuario.setStatus(StatusUsuario.TRIAL_ATIVO);
+        usuario.setDataInicioTrial(LocalDate.now());
+        usuario.setDataFimTrial(LocalDate.now().plusDays(7));
+
+        usuario = usuarioRepository.save(usuario);
+        return toAdminUsuarioResponse(usuario);
+    }
+
+    @Transactional
+    public AdminUsuarioResponse editarUsuario(Long usuarioId, AdminEditarUsuarioRequest request) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        usuario.setNome(request.nome());
+        usuario.setEmail(request.email());
+        usuario.setRole(request.role());
+
+        usuario = usuarioRepository.save(usuario);
+        return toAdminUsuarioResponse(usuario);
+    }
+
+    @Transactional
+    public AdminUsuarioResponse inativarUsuario(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        usuario.setStatus(StatusUsuario.BLOQUEADO);
+        usuario = usuarioRepository.save(usuario);
+        return toAdminUsuarioResponse(usuario);
+    }
+
+    @Transactional
+    public AdminUsuarioResponse reativarUsuario(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        usuario.setStatus(StatusUsuario.ATIVO);
+        usuario = usuarioRepository.save(usuario);
+        return toAdminUsuarioResponse(usuario);
+    }
+
+    @Transactional
     public AssinaturaResponse confirmarPagamento(ConfirmarPagamentoRequest request, Long adminId) {
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
@@ -97,6 +158,33 @@ public class AdminService {
         usuarioRepository.save(usuario);
 
         return toAssinaturaResponse(assinatura);
+    }
+
+    @Transactional(readOnly = true)
+    public TrialInfoResponse getTrialInfo(Long usuarioId) {
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        String whatsapp = configuracaoRepository.findByChave("whatsapp_admin")
+                .map(c -> c.getValor())
+                .orElse("");
+
+        if (usuario.getDataFimTrial() == null) {
+            return new TrialInfoResponse(0, null, true, whatsapp);
+        }
+
+        LocalDate hoje = LocalDate.now();
+        long diasRestantes = ChronoUnit.DAYS.between(hoje, usuario.getDataFimTrial());
+        boolean expirado = diasRestantes < 0;
+
+        if (expirado) diasRestantes = 0;
+
+        return new TrialInfoResponse(
+                (int) diasRestantes,
+                usuario.getDataFimTrial(),
+                expirado,
+                whatsapp
+        );
     }
 
     private AdminUsuarioResponse toAdminUsuarioResponse(Usuario usuario) {

@@ -1,9 +1,35 @@
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { Button, Card } from '../components/ui'
-import { Lock, MessageCircle, Mail, LogOut } from 'lucide-react'
+import { Lock, MessageCircle, LogOut } from 'lucide-react'
 
 export default function Assine() {
   const { usuario, logout } = useAuth()
+  const [whatsappAdmin, setWhatsappAdmin] = useState('')
+
+  useEffect(() => {
+    fetchWhatsApp()
+  }, [])
+
+  async function fetchWhatsApp() {
+    try {
+      const response = await fetch('http://localhost:8080/configuracoes/chave/whatsapp_admin')
+      if (response.ok) {
+        const text = await response.text()
+        setWhatsappAdmin(text)
+      }
+    } catch {
+      // Silently fail
+    }
+  }
+
+  function abrirWhatsApp() {
+    const mensagem = encodeURIComponent('Olá! Quero assinar um plano do Motoristas Finanças.')
+    const url = whatsappAdmin
+      ? `https://wa.me/${whatsappAdmin}?text=${mensagem}`
+      : `https://wa.me/?text=${mensagem}`
+    window.open(url, '_blank')
+  }
 
   const planos = [
     { nome: 'Básico', valor: 'R$ 19,90', veiculos: '1 veículo', cor: 'var(--info)' },
@@ -46,14 +72,27 @@ export default function Assine() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
-          <Button variant="primary" fullWidth>
-            <MessageCircle size={18} /> WhatsApp
-          </Button>
-          <Button variant="secondary" fullWidth>
-            <Mail size={18} /> Email
-          </Button>
-        </div>
+        <button
+          onClick={abrirWhatsApp}
+          style={{
+            width: '100%',
+            padding: '14px',
+            background: '#25D366',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 'var(--radius-md)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            fontSize: 16,
+            fontWeight: 600,
+            marginBottom: 'var(--space-md)',
+          }}
+        >
+          <MessageCircle size={20} /> Falar com Administrador
+        </button>
 
         <div style={{ textAlign: 'center' }}>
           <Button variant="ghost" onClick={logout}>
