@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.motoristasfinancas.api.dto.AdminDashboardResponse;
 import com.motoristasfinancas.api.dto.AdminUsuarioResponse;
@@ -30,6 +31,7 @@ public class AdminService {
     private final PlanoRepository planoRepository;
     private final AssinaturaRepository assinaturaRepository;
 
+    @Transactional(readOnly = true)
     public AdminDashboardResponse getDashboard() {
         List<Usuario> todosUsuarios = usuarioRepository.findAll();
 
@@ -61,6 +63,7 @@ public class AdminService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<AdminUsuarioResponse> listarUsuarios() {
         return usuarioRepository.findAll()
                 .stream()
@@ -68,6 +71,7 @@ public class AdminService {
                 .toList();
     }
 
+    @Transactional
     public AssinaturaResponse confirmarPagamento(ConfirmarPagamentoRequest request, Long adminId) {
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));

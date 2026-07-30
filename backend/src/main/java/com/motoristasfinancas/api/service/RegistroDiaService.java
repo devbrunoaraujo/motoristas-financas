@@ -28,6 +28,7 @@ public class RegistroDiaService {
     private final VeiculoRepository veiculoRepository;
     private final PrecoCombustivelRepository precoRepository;
 
+    @Transactional(readOnly = true)
     public List<RegistroDiaResponse> listar(Long usuarioId) {
         return registroRepository.findByUsuarioIdOrderByDataDesc(usuarioId)
                 .stream()
@@ -78,6 +79,7 @@ public class RegistroDiaService {
         return toResponse(registro);
     }
 
+    @Transactional
     public void excluir(Long usuarioId, Long registroId) {
         RegistroDia registro = registroRepository.findByIdAndUsuarioId(registroId, usuarioId)
                 .orElseThrow(() -> new RuntimeException("Registro não encontrado"));
