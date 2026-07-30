@@ -3,10 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
 import Cadastro from './pages/Cadastro'
-
-function Dashboard() {
-  return <h1>Dashboard (em breve)</h1>
-}
+import Veiculos from './pages/motorista/Veiculos'
 
 function App() {
   return (
@@ -16,14 +13,15 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route
-            path="/"
+            path="/veiculos"
             element={
               <PrivateRoute>
-                <Dashboard />
+                <Veiculos />
               </PrivateRoute>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<Navigate to="/veiculos" replace />} />
+          <Route path="*" element={<Navigate to="/veiculos" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
