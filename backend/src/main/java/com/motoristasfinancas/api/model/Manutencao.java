@@ -3,7 +3,7 @@ package com.motoristasfinancas.api.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.motoristasfinancas.api.model.enums.TipoCombustivel;
+import com.motoristasfinancas.api.model.enums.TipoManutencao;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,44 +21,38 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "veiculos")
+@Table(name = "manutencoes")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Veiculo {
+public class Manutencao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario;
-
-    @Column(nullable = false, length = 80)
-    private String apelido;
-
-    @Column(length = 10)
-    private String placa;
+    @JoinColumn(name = "veiculo_id", nullable = false)
+    private Veiculo veiculo;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
-    private TipoCombustivel tipoCombustivel;
+    @Column(nullable = false, length = 20)
+    private TipoManutencao tipo;
 
-    @Column(nullable = false, precision = 6, scale = 2)
-    private BigDecimal autonomia;
+    @Column(length = 300)
+    private String descricao;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal kmReferencia;
 
     @Column(nullable = false)
-    private boolean ativo = true;
+    private LocalDate data;
 
-    @Column(precision = 12, scale = 2)
-    private BigDecimal valorCompra;
-
-    @Column(precision = 12, scale = 2)
-    private BigDecimal valorRevendaEstimado;
-
-    private LocalDate dataAquisicao;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal valor;
 
     @Column(precision = 10, scale = 2)
-    private BigDecimal kmAtual;
+    private BigDecimal proximoKm;
+
+    private LocalDate proximaData;
 }
