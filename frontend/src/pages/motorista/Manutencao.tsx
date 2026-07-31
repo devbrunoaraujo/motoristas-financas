@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import * as manutencaoService from '../../services/manutencaoService'
 import * as veiculoService from '../../services/veiculoService'
 import type { ManutencaoResponse, TipoManutencao, AlertaManutencaoResponse, DepreciacaoResponse } from '../../types/manutencao'
 import type { VeiculoResponse } from '../../types/veiculo'
-import { Card, Button, Input, Select, PageHeader, EmptyState } from '../../components/ui'
+import { Card, Button, Input, Select, EmptyState } from '../../components/ui'
 import { Wrench, Plus, Trash2, Save, X, AlertTriangle, TrendingDown } from 'lucide-react'
 
 const TIPOS: { value: TipoManutencao; label: string }[] = [
@@ -106,7 +107,11 @@ export default function Manutencao() {
 
   return (
     <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
-      <PageHeader title="Manutenção" action={
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 'var(--space-lg)' }}>
+        <Link to="/registros" style={{ color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </Link>
+        <h1 style={{ fontSize: 22, fontWeight: 700, flex: 1 }}>Manutenção</h1>
         <div style={{ display: 'flex', gap: 8 }}>
           {!mostrarForm && !mostrarAlertaForm && (
             <>
@@ -115,7 +120,7 @@ export default function Manutencao() {
             </>
           )}
         </div>
-      } />
+      </div>
 
       {erro && <div style={{ padding: '10px 14px', background: 'rgba(225,112,85,0.1)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: 14, marginBottom: 'var(--space-md)' }}>{erro}</div>}
       {sucesso && <div style={{ padding: '10px 14px', background: 'rgba(0,184,148,0.1)', borderRadius: 'var(--radius-md)', color: 'var(--accent)', fontSize: 14, marginBottom: 'var(--space-md)' }}>{sucesso}</div>}
