@@ -11,12 +11,13 @@ import Despesas from './pages/motorista/Despesas'
 import Dashboard from './pages/motorista/Dashboard'
 import Metas from './pages/motorista/Metas'
 import Manutencao from './pages/motorista/Manutencao'
+import Turnos from './pages/motorista/Turnos'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsuarios from './pages/admin/AdminUsuarios'
 import AdminPlanos from './pages/admin/AdminPlanos'
 import AdminPlataformas from './pages/admin/AdminPlataformas'
 import Configuracoes from './pages/admin/Configuracoes'
-import { LayoutDashboard, Calendar, Car, Receipt, Target, Wrench, Users, CreditCard, Layers, Settings, LogOut } from 'lucide-react'
+import { LayoutDashboard, Calendar, Car, Receipt, Target, Wrench, Clock, Users, CreditCard, Layers, Settings, LogOut } from 'lucide-react'
 
 function NavBar() {
   const { isAuthenticated, usuario, logout } = useAuth()
@@ -28,6 +29,7 @@ function NavBar() {
   const motoristaLinks = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/registros', icon: Calendar, label: 'Registros' },
+    { to: '/turnos', icon: Clock, label: 'Turnos' },
     { to: '/metas', icon: Target, label: 'Metas' },
     { to: '/veiculos', icon: Car, label: 'Veículos' },
     { to: '/manutencao', icon: Wrench, label: 'Manutenção' },
@@ -186,6 +188,7 @@ function App() {
 
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/registros" element={<PrivateRoute><RegistroDia /></PrivateRoute>} />
+            <Route path="/turnos" element={<PrivateRoute><Turnos /></PrivateRoute>} />
             <Route path="/metas" element={<PrivateRoute><Metas /></PrivateRoute>} />
             <Route path="/veiculos" element={<PrivateRoute><Veiculos /></PrivateRoute>} />
             <Route path="/manutencao" element={<PrivateRoute><Manutencao /></PrivateRoute>} />
