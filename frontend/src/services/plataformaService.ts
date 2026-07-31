@@ -6,6 +6,11 @@ export async function listarPlataformas(): Promise<Plataforma[]> {
   return response.data
 }
 
+export async function listarPlataformasPublico(): Promise<Plataforma[]> {
+  const response = await api.get<Plataforma[]>('/plataformas')
+  return response.data
+}
+
 export async function criarPlataforma(dados: PlataformaRequest): Promise<Plataforma> {
   const response = await api.post<Plataforma>('/admin/plataformas', dados)
   return response.data
