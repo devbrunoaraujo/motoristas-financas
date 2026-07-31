@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import * as registroService from '../../services/registroService'
 import * as veiculoService from '../../services/veiculoService'
 import * as plataformaService from '../../services/plataformaService'
@@ -6,7 +7,7 @@ import type { RegistroDiaResponse, GanhoPlataformaRequest } from '../../types/re
 import type { VeiculoResponse } from '../../types/veiculo'
 import type { Plataforma } from '../../types/plataforma'
 import { Card, Button, Input, Select, PageHeader, Badge, EmptyState } from '../../components/ui'
-import { Plus, Trash2, Edit3, Calendar, Save, X, FileText } from 'lucide-react'
+import { Plus, Trash2, Edit3, Calendar, Save, X, FileText, Fuel } from 'lucide-react'
 
 export default function RegistroDia() {
   const [registros, setRegistros] = useState<RegistroDiaResponse[]>([])
@@ -104,9 +105,16 @@ export default function RegistroDia() {
   return (
     <div style={{ padding: 'var(--space-md)', maxWidth: 700, margin: '0 auto' }}>
       <PageHeader title="Registro do Dia" action={
-        !mostrarForm && <Button size="sm" onClick={abrirNovo} disabled={veiculos.length === 0 || plataformas.length === 0}>
-          <Plus size={16} /> Novo
-        </Button>
+        !mostrarForm && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link to="/combustivel">
+              <Button size="sm" variant="ghost"><Fuel size={16} /> Combustível</Button>
+            </Link>
+            <Button size="sm" onClick={abrirNovo} disabled={veiculos.length === 0 || plataformas.length === 0}>
+              <Plus size={16} /> Novo
+            </Button>
+          </div>
+        )
       } />
 
       {erro && <div style={{ padding: '10px 14px', background: 'rgba(225,112,85,0.1)', borderRadius: 'var(--radius-md)', color: 'var(--danger)', fontSize: 14, marginBottom: 'var(--space-md)' }}>{erro}</div>}

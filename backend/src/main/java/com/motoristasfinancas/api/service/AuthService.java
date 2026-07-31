@@ -50,7 +50,8 @@ public class AuthService {
                 token,
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getRole()
+                usuario.getRole(),
+                usuario.getStatus()
         );
     }
 
@@ -72,7 +73,8 @@ public class AuthService {
                 token,
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getRole()
+                usuario.getRole(),
+                usuario.getStatus()
         );
     }
 }

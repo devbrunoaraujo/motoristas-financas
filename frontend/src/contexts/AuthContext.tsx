@@ -35,7 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const user: Usuario = {
       nome: data.nome,
       email: data.email,
-      role: data.role
+      role: data.role,
+      status: data.status
     }
 
     setToken(data.token)

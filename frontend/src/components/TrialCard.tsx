@@ -11,8 +11,12 @@ export default function TrialCard() {
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    if (usuario?.role === 'MOTORISTA') {
+    // Só buscar info de trial se o usuário estiver em trial ou trial expirado
+    if (usuario?.role === 'MOTORISTA' && 
+        (usuario.status === 'TRIAL_ATIVO' || usuario.status === 'TRIAL_EXPIRADO')) {
       carregarTrialInfo()
+    } else {
+      setCarregando(false)
     }
   }, [usuario])
 
@@ -28,7 +32,9 @@ export default function TrialCard() {
     }
   }
 
+  // Não mostrar nada se não for motorista ou se já tem plano ativo
   if (carregando || !trialInfo || usuario?.role !== 'MOTORISTA') return null
+  if (usuario.status !== 'TRIAL_ATIVO' && usuario.status !== 'TRIAL_EXPIRADO') return null
 
   const { diasRestantes, expirado, whatsappAdmin } = trialInfo
   const porcentagem = Math.max(0, Math.min(100, (diasRestantes / 7) * 100))
