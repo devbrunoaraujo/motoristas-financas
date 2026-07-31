@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.motoristasfinancas.api.model.enums.Plataforma;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
@@ -29,7 +27,7 @@ public record RegistroDiaRequest(
 ) {
     public record GanhoPlataformaRequest(
         @NotNull(message = "Plataforma é obrigatória")
-        Plataforma plataforma,
+        Long plataformaId,
 
         @NotNull(message = "Valor é obrigatório")
         @DecimalMin(value = "0.01", message = "Valor deve ser maior que zero")

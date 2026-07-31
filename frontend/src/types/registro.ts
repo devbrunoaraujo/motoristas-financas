@@ -1,7 +1,5 @@
-export type Plataforma = 'UBER' | 'NOVENTA_E_NOVE' | 'IFOOD' | 'INDRIVE' | 'OUTRA'
-
 export interface GanhoPlataformaRequest {
-  plataforma: Plataforma
+  plataformaId: number
   valor: number
 }
 
@@ -14,7 +12,8 @@ export interface RegistroDiaRequest {
 
 export interface GanhoPlataformaResponse {
   id: number
-  plataforma: Plataforma
+  plataformaId: number
+  plataformaNome: string
   valor: number
 }
 

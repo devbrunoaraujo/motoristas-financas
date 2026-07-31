@@ -21,7 +21,7 @@ export default function RegistroDia() {
   const [veiculoId, setVeiculoId] = useState<number>(0)
   const [data, setData] = useState(new Date().toISOString().split('T')[0])
   const [kmRodado, setKmRodado] = useState('')
-  const [ganhos, setGanhos] = useState<GanhoPlataformaRequest[]>([{ plataforma: 'UBER', valor: 0 }])
+  const [ganhos, setGanhos] = useState<GanhoPlataformaRequest[]>([{ plataformaId: 0, valor: 0 }])
 
   useEffect(() => { carregarDados() }, [])
 
@@ -35,27 +35,22 @@ export default function RegistroDia() {
       ])
       setRegistros(regs); setVeiculos(veics); setPlataformas(plats)
       if (veics.length > 0 && veiculoId === 0) setVeiculoId(veics[0].id)
-      if (plats.length > 0) {
-        setGanhos(prev => prev.map(g => ({ ...g, plataforma: plats[0].nome.toUpperCase().replace(/ /g, '_') as any })))
-      }
+      if (plats.length > 0) setGanhos([{ plataformaId: plats[0].id, valor: 0 }])
     } catch { setErro('Erro ao carregar dados') } finally { setCarregando(false) }
   }
 
   function limparForm() {
-    const primeiraPlataforma = plataformas.length > 0 ? plataformas[0].nome.toUpperCase().replace(/ /g, '_') : 'UBER'
+    const primeiraId = plataformas.length > 0 ? plataformas[0].id : 0
     setKmRodado('')
-    setGanhos([{ plataforma: primeiraPlataforma as any, valor: 0 }])
+    setGanhos([{ plataformaId: primeiraId, valor: 0 }])
     setData(new Date().toISOString().split('T')[0])
-    setEditando(null)
-    setMostrarForm(false)
-    setErro('')
-    setSucesso('')
+    setEditando(null); setMostrarForm(false); setErro(''); setSucesso('')
   }
 
   function abrirEdicao(reg: RegistroDiaResponse) {
     setEditando(reg); setVeiculoId(reg.veiculoId); setData(reg.data)
     setKmRodado(String(reg.kmRodado))
-    setGanhos(reg.ganhos.map(g => ({ plataforma: g.plataforma, valor: g.valor })))
+    setGanhos(reg.ganhos.map(g => ({ plataformaId: g.plataformaId, valor: g.valor })))
     setMostrarForm(true); setErro(''); setSucesso('')
   }
 
@@ -63,36 +58,29 @@ export default function RegistroDia() {
     setEditando(null)
     setData(new Date().toISOString().split('T')[0])
     setKmRodado('')
-    const primeiraPlataforma = plataformas.length > 0 ? plataformas[0].nome.toUpperCase().replace(/ /g, '_') : 'UBER'
-    setGanhos([{ plataforma: primeiraPlataforma as any, valor: 0 }])
-    setMostrarForm(true)
-    setErro('')
-    setSucesso('')
+    const primeiraId = plataformas.length > 0 ? plataformas[0].id : 0
+    setGanhos([{ plataformaId: primeiraId, valor: 0 }])
+    setMostrarForm(true); setErro(''); setSucesso('')
   }
 
   function adicionarGanho() {
-    const primeiraPlataforma = plataformas.length > 0 ? plataformas[0].nome.toUpperCase().replace(/ /g, '_') : 'UBER'
-    setGanhos([...ganhos, { plataforma: primeiraPlataforma as any, valor: 0 }])
+    const primeiraId = plataformas.length > 0 ? plataformas[0].id : 0
+    setGanhos([...ganhos, { plataformaId: primeiraId, valor: 0 }])
   }
 
   function removerGanho(index: number) {
     setGanhos(ganhos.filter((_, i) => i !== index))
   }
 
-  function atualizarGanho(index: number, campo: 'plataforma' | 'valor', valor: any) {
+  function atualizarGanho(index: number, campo: 'plataformaId' | 'valor', valor: any) {
     const g = [...ganhos]
-    g[index] = { ...g[index], [campo]: campo === 'valor' ? Number(valor) : valor }
+    g[index] = { ...g[index], [campo]: campo === 'valor' ? Number(valor) : Number(valor) }
     setGanhos(g)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setErro(''); setSucesso('')
-    const dados = {
-      veiculoId,
-      data,
-      kmRodado: Number(kmRodado),
-      ganhos: ganhos.filter(g => g.valor > 0)
-    }
+    const dados = { veiculoId, data, kmRodado: Number(kmRodado), ganhos: ganhos.filter(g => g.valor > 0) }
     try {
       await registroService.criarRegistro(dados)
       setSucesso(editando ? 'Registro atualizado!' : 'Registro salvo!')
@@ -107,13 +95,6 @@ export default function RegistroDia() {
 
   function fmtMoeda(v: number) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }
   function fmtData(d: string) { return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') }
-
-  // Mapear nomes das plataformas para exibição
-  const plataformaLabels: Record<string, string> = {}
-  plataformas.forEach(p => {
-    const key = p.nome.toUpperCase().replace(/ /g, '_')
-    plataformaLabels[key] = p.nome
-  })
 
   if (carregando) return <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-2xl)' }}>
     <div style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -146,19 +127,15 @@ export default function RegistroDia() {
               options={veiculos.map(v => ({ value: v.id, label: v.apelido }))} />
 
             <Input label="Data" type="date" value={data} onChange={e => setData(e.target.value)} required disabled={!!editando} />
-
             <Input label="KM Rodado" type="number" step="0.1" min="0.1" value={kmRodado} onChange={e => setKmRodado(e.target.value)} required placeholder="Ex: 150" />
 
             <div style={{ marginBottom: 'var(--space-md)' }}>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>Ganhos por Plataforma</label>
               {ganhos.map((ganho, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                  <select value={ganho.plataforma} onChange={e => atualizarGanho(i, 'plataforma', e.target.value)}
+                  <select value={ganho.plataformaId} onChange={e => atualizarGanho(i, 'plataformaId', e.target.value)}
                     style={{ flex: 1, padding: '10px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: 14 }}>
-                    {plataformas.map(p => {
-                      const key = p.nome.toUpperCase().replace(/ /g, '_')
-                      return <option key={p.id} value={key}>{p.nome}</option>
-                    })}
+                    {plataformas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                   </select>
                   <input type="number" step="0.01" min="0.01" placeholder="Valor" value={ganho.valor || ''}
                     onChange={e => atualizarGanho(i, 'valor', e.target.value)}
@@ -217,7 +194,7 @@ export default function RegistroDia() {
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {reg.ganhos.map(g => (
-                  <Badge key={g.id} variant="success">{plataformaLabels[g.plataforma] || g.plataforma}: {fmtMoeda(g.valor)}</Badge>
+                  <Badge key={g.id} variant="success">{g.plataformaNome}: {fmtMoeda(g.valor)}</Badge>
                 ))}
               </div>
             </Card>

@@ -11,9 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.motoristasfinancas.api.dto.RegistroDiaRequest;
 import com.motoristasfinancas.api.dto.RegistroDiaResponse;
 import com.motoristasfinancas.api.model.GanhoPorPlataforma;
+import com.motoristasfinancas.api.model.Plataforma;
 import com.motoristasfinancas.api.model.PrecoCombustivel;
 import com.motoristasfinancas.api.model.RegistroDia;
 import com.motoristasfinancas.api.model.Veiculo;
+import com.motoristasfinancas.api.repository.PlataformaRepository;
 import com.motoristasfinancas.api.repository.PrecoCombustivelRepository;
 import com.motoristasfinancas.api.repository.RegistroDiaRepository;
 import com.motoristasfinancas.api.repository.VeiculoRepository;
@@ -27,6 +29,7 @@ public class RegistroDiaService {
     private final RegistroDiaRepository registroRepository;
     private final VeiculoRepository veiculoRepository;
     private final PrecoCombustivelRepository precoRepository;
+    private final PlataformaRepository plataformaRepository;
 
     @Transactional(readOnly = true)
     public List<RegistroDiaResponse> listar(Long usuarioId) {
@@ -74,9 +77,12 @@ public class RegistroDiaService {
         }
 
         for (RegistroDiaRequest.GanhoPlataformaRequest ganhoReq : request.ganhos()) {
+            Plataforma plataforma = plataformaRepository.findById(ganhoReq.plataformaId())
+                    .orElseThrow(() -> new RuntimeException("Plataforma não encontrada: " + ganhoReq.plataformaId()));
+
             GanhoPorPlataforma ganho = new GanhoPorPlataforma();
             ganho.setRegistroDia(registro);
-            ganho.setPlataforma(ganhoReq.plataforma());
+            ganho.setPlataforma(plataforma);
             ganho.setValor(ganhoReq.valor());
             registro.getGanhos().add(ganho);
         }
@@ -101,7 +107,11 @@ public class RegistroDiaService {
 
     private RegistroDiaResponse toResponse(RegistroDia registro) {
         List<RegistroDiaResponse.GanhoPlataformaResponse> ganhosResponse = registro.getGanhos().stream()
-                .map(g -> new RegistroDiaResponse.GanhoPlataformaResponse(g.getId(), g.getPlataforma(), g.getValor()))
+                .map(g -> new RegistroDiaResponse.GanhoPlataformaResponse(
+                        g.getId(),
+                        g.getPlataforma().getId(),
+                        g.getPlataforma().getNome(),
+                        g.getValor()))
                 .toList();
 
         return new RegistroDiaResponse(

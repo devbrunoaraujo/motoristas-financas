@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.motoristasfinancas.api.model.enums.Plataforma;
-
 public record RegistroDiaResponse(
     Long id,
     Long veiculoId,
@@ -19,7 +17,8 @@ public record RegistroDiaResponse(
 ) {
     public record GanhoPlataformaResponse(
         Long id,
-        Plataforma plataforma,
+        Long plataformaId,
+        String plataformaNome,
         BigDecimal valor
     ) {}
 }
