@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend } from 'recharts'
 import * as dashboardService from '../../services/dashboardService'
 import * as metaService from '../../services/metaService'
+import * as exportacaoService from '../../services/exportacaoService'
 import type { DashboardResponse } from '../../types/dashboard'
 import type { DiaResumo } from '../../services/dashboardService'
 import type { MetaProgresso } from '../../types/meta'
-import { Card, StatCard, PageHeader } from '../../components/ui'
+import { Card, StatCard, PageHeader, Button } from '../../components/ui'
 import TrialCard from '../../components/TrialCard'
-import { TrendingUp, Fuel, Receipt, DollarSign, Gauge, BarChart3, Target } from 'lucide-react'
+import { TrendingUp, Fuel, Receipt, DollarSign, Gauge, BarChart3, Target, Download, FileSpreadsheet } from 'lucide-react'
 
 const COLORS = ['#00b894', '#e17055', '#fdcb6e', '#74b9ff', '#a29bfe']
 
@@ -103,6 +104,16 @@ export default function Dashboard() {
   return (
     <div style={{ padding: 'var(--space-md)', maxWidth: 600, margin: '0 auto' }}>
       <PageHeader title="Dashboard" />
+
+      {/* Export buttons */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 'var(--space-md)' }}>
+        <Button size="sm" variant="ghost" onClick={() => exportacaoService.exportarRelatorio('xlsx')}>
+          <FileSpreadsheet size={14} /> Excel
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => exportacaoService.exportarRelatorio('pdf')}>
+          <Download size={14} /> PDF
+        </Button>
+      </div>
 
       <TrialCard />
 
