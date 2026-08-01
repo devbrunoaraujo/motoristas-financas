@@ -57,8 +57,12 @@ public class DashboardService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal ganhoMedioPorKm = BigDecimal.ZERO;
+        BigDecimal custoCombustivelPorKm = BigDecimal.ZERO;
+        BigDecimal ganhoBrutoPorKm = BigDecimal.ZERO;
         if (kmTotalRodado.compareTo(BigDecimal.ZERO) > 0) {
-            ganhoMedioPorKm = ganhoBrutoMes.divide(kmTotalRodado, 2, RoundingMode.HALF_UP);
+            ganhoMedioPorKm = lucroLiquidoMes.divide(kmTotalRodado, 2, RoundingMode.HALF_UP);
+            custoCombustivelPorKm = gastoCombustivelMes.divide(kmTotalRodado, 2, RoundingMode.HALF_UP);
+            ganhoBrutoPorKm = ganhoBrutoMes.divide(kmTotalRodado, 2, RoundingMode.HALF_UP);
         }
 
         return new DashboardResponse(
@@ -74,6 +78,8 @@ public class DashboardService {
                 lucroLiquidoMes,
                 kmTotalRodado,
                 ganhoMedioPorKm,
+                custoCombustivelPorKm,
+                ganhoBrutoPorKm,
                 inicioSemana,
                 inicioMes
         );

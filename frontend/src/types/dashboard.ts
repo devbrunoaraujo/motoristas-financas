@@ -11,6 +11,8 @@ export interface DashboardResponse {
   lucroLiquidoMes: number
   kmTotalRodado: number
   ganhoMedioPorKm: number
+  custoCombustivelPorKm: number
+  ganhoBrutoPorKm: number
   inicioSemana: string
   inicioMes: string
 }

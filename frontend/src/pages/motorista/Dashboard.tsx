@@ -139,6 +139,20 @@ export default function Dashboard() {
         <StatCard title="KM Rodado" value={`${dados.kmTotalRodado.toFixed(1)} km`} icon={<Gauge size={20} />} color="var(--info)" />
       </div>
 
+      {/* Cards de performance por KM */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
+        <Card style={{ background: 'linear-gradient(135deg, rgba(0,184,148,0.08), rgba(0,184,148,0.03))' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Ganho Bruto/KM</p>
+          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--accent)' }}>{formatarMoeda(dados.ganhoBrutoPorKm)}</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Média mensal por km rodado</p>
+        </Card>
+        <Card style={{ background: 'linear-gradient(135deg, rgba(225,112,85,0.08), rgba(225,112,85,0.03))' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 4 }}>Custo Combustível/KM</p>
+          <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--danger)' }}>{formatarMoeda(dados.custoCombustivelPorKm)}</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Quanto gasta em combustível por km</p>
+        </Card>
+      </div>
+
       {/* Stacked Bar Chart */}
       {barData.length > 0 && (
         <Card style={{ marginBottom: 'var(--space-md)' }}>

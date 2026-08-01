@@ -16,6 +16,8 @@ public record DashboardResponse(
     BigDecimal lucroLiquidoMes,
     BigDecimal kmTotalRodado,
     BigDecimal ganhoMedioPorKm,
+    BigDecimal custoCombustivelPorKm,
+    BigDecimal ganhoBrutoPorKm,
     LocalDate inicioSemana,
     LocalDate inicioMes
 ) {}
