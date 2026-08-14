@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Motoristas Finanças',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
+    androidScheme: 'http',
   },
 }
 
