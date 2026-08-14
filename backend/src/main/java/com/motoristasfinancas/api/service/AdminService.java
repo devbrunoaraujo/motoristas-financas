@@ -143,6 +143,13 @@ public class AdminService {
         Usuario admin = usuarioRepository.findById(adminId)
                 .orElseThrow(() -> new RuntimeException("Admin não encontrado"));
 
+        // Cancelar assinaturas ATIVAS existentes
+        assinaturaRepository.findByUsuarioIdAndStatus(usuarioId, StatusAssinatura.ATIVA)
+                .forEach(a -> {
+                    a.setStatus(StatusAssinatura.CANCELADA);
+                    assinaturaRepository.save(a);
+                });
+
         Assinatura assinatura = new Assinatura();
         assinatura.setUsuario(usuario);
         assinatura.setPlano(plano);
