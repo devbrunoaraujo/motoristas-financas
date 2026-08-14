@@ -89,3 +89,44 @@ export function Badge({ children, variant = 'success' }: { children: React.React
     </span>
   )
 }
+
+export function StatCard({ title, value, icon, color }: { title: string; value: string; icon: React.ReactNode; color: string }) {
+  return (
+    <Card style={{ position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: 12, right: 12, opacity: 0.15, color }}>{icon}</div>
+      <p style={{ fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>{title}</p>
+      <p style={{ fontSize: 18, fontWeight: 700, color }}>{value}</p>
+    </Card>
+  )
+}
+
+export function PageHeader({ title }: { title: string }) {
+  return (
+    <h1 style={{ fontSize: 24, fontWeight: 700, color: colors.text, marginBottom: 4 }}>{title}</h1>
+  )
+}
+
+export function ProgressBar({ label, realizado, meta, percentual, cor }: { label: string; realizado: number; meta: number; percentual: number; cor: string }) {
+  const pct = Math.min(percentual, 100)
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 12, color: colors.textMuted }}>{label}</span>
+        <span style={{ fontSize: 12, color: colors.textSecondary, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
+      </div>
+      <div style={{ height: 8, background: colors.input, borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%',
+          width: `${pct}%`,
+          background: `linear-gradient(90deg, ${cor}, ${cor}aa)`,
+          borderRadius: 999,
+          transition: 'width 0.8s ease',
+        }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+        <span style={{ fontSize: 11, color: colors.textMuted }}>{realizado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        <span style={{ fontSize: 11, color: colors.textMuted }}>{meta.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+      </div>
+    </div>
+  )
+}
