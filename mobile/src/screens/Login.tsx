@@ -14,7 +14,10 @@ export default function Login() {
   async function handleLogin() {
     setErro(''); setCarregando(true)
     try { await login(email, senha) }
-    catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao fazer login') }
+    catch (err: any) {
+      const detalhe = err.message || err.code || 'desconhecido'
+      setErro(err.response?.data?.mensagem || `Erro ao fazer login: ${detalhe}`)
+    }
     finally { setCarregando(false) }
   }
 
