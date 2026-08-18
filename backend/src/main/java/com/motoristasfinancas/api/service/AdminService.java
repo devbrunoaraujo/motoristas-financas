@@ -224,7 +224,7 @@ public class AdminService {
 
     private AdminUsuarioResponse toAdminUsuarioResponse(Usuario usuario) {
         AssinaturaResponse assinaturaAtiva = assinaturaRepository
-                .findFirstByUsuarioIdOrderByDataExpiracaoDesc(usuario.getId())
+                .findFirstByUsuarioIdAndStatusOrderByDataExpiracaoDesc(usuario.getId(), StatusAssinatura.ATIVA)
                 .map(this::toAssinaturaResponse)
                 .orElse(null);
 

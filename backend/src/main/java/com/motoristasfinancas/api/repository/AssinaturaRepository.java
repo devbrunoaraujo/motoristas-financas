@@ -12,5 +12,7 @@ public interface AssinaturaRepository extends JpaRepository<Assinatura, Long> {
 
     Optional<Assinatura> findFirstByUsuarioIdOrderByDataExpiracaoDesc(Long usuarioId);
 
+    Optional<Assinatura> findFirstByUsuarioIdAndStatusOrderByDataExpiracaoDesc(Long usuarioId, StatusAssinatura status);
+
     List<Assinatura> findByUsuarioIdAndStatus(Long usuarioId, StatusAssinatura status);
 }
