@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api/api'
 import { Card, Button, Input, Loading, EmptyState, colors } from '../components/ui'
 import type { RegistroDiaResponse, VeiculoResponse, Plataforma } from '../types'
+import { Plus, Fuel, Trash2, Save, X } from 'lucide-react'
 
 export default function RegistroDia() {
+  const navigate = useNavigate()
   const [registros, setRegistros] = useState<RegistroDiaResponse[]>([])
   const [veiculos, setVeiculos] = useState<VeiculoResponse[]>([])
   const [plataformas, setPlataformas] = useState<Plataforma[]>([])
@@ -53,10 +56,26 @@ export default function RegistroDia() {
     <div style={{ padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, color: colors.text }}>Registros</h1>
-        <button onClick={() => setMostrarForm(!mostrarForm)} style={{ background: colors.accent, padding: 10, borderRadius: 10, border: 'none', cursor: 'pointer', color: '#fff', fontSize: 20 }}>+</button>
+        {!mostrarForm && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => navigate('/combustivel')} style={{ background: 'none', border: `1px solid ${colors.border}`, padding: '8px 12px', borderRadius: 10, cursor: 'pointer', color: colors.textSecondary, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+              <Fuel size={16} /> Combustível
+            </button>
+            <button onClick={() => setMostrarForm(true)} style={{ background: colors.accent, padding: '8px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+              <Plus size={16} /> Novo
+            </button>
+          </div>
+        )}
       </div>
 
-      {erro && <p style={{ color: colors.danger, marginBottom: 12 }}>{erro}</p>}
+      {erro && <div style={{ padding: '10px 14px', background: 'rgba(225,112,85,0.1)', borderRadius: 12, color: colors.danger, fontSize: 14, marginBottom: 16 }}>{erro}</div>}
+
+      {veiculos.length === 0 && <EmptyState icon="🚗" title="Cadastre um veículo primeiro" />}
+      {plataformas.length === 0 && veiculos.length > 0 && (
+        <div style={{ padding: 12, background: 'rgba(253,203,110,0.1)', borderRadius: 12, marginBottom: 16 }}>
+          <p style={{ color: colors.warning, fontSize: 14 }}>Nenhuma plataforma cadastrada. Peça ao admin para cadastrar plataformas.</p>
+        </div>
+      )}
 
       {mostrarForm && (
         <Card style={{ marginBottom: 16 }}>
@@ -89,38 +108,63 @@ export default function RegistroDia() {
                   style={{ flex: 1, padding: '10px', background: colors.input, border: `1px solid ${colors.border}`, borderRadius: 12, color: colors.text, fontSize: 14, outline: 'none' }} />
                 {ganhos.length > 1 && (
                   <button onClick={() => setGanhos(ganhos.filter((_, j) => j !== i))}
-                    style={{ padding: '10px', background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 12, color: colors.danger, cursor: 'pointer' }}>X</button>
+                    style={{ padding: '10px', background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 12, color: colors.danger, cursor: 'pointer' }}>
+                    <Trash2 size={16} />
+                  </button>
                 )}
               </div>
             ))}
             <button onClick={() => setGanhos([...ganhos, { plataformaId: plataformas[0]?.id || 0, valor: '' }])}
-              style={{ padding: '8px 12px', background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 12, color: colors.textMuted, cursor: 'pointer', fontSize: 13 }}>
-              + Adicionar plataforma
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'none', border: `1px dashed ${colors.border}`, borderRadius: 12, color: colors.textMuted, cursor: 'pointer', fontSize: 13 }}>
+              <Plus size={14} /> Adicionar plataforma
             </button>
           </div>
-          <Button onClick={handleSubmit}>Salvar</Button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button onClick={handleSubmit} style={{ flex: 1 }}><Save size={16} /> Salvar</Button>
+            <Button variant="ghost" onClick={() => setMostrarForm(false)}><X size={16} /></Button>
+          </div>
         </Card>
       )}
 
-      {registros.length === 0 ? (
-        <EmptyState icon="📅" title="Nenhum registro" description="Registre seu primeiro dia" />
+      {registros.length === 0 && !mostrarForm ? (
+        <EmptyState icon="📅" title="Nenhum registro" description="Registre seu primeiro dia de trabalho" />
       ) : (
-        registros.map(reg => (
-          <Card key={reg.id} style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: colors.text }}>{fmtData(reg.data)}</p>
-                <p style={{ fontSize: 13, color: colors.textMuted }}>{reg.veiculoApelido} • {reg.kmRodado} km</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {registros.map((reg) => (
+            <Card key={reg.id}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <div>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: colors.text }}>{fmtData(reg.data)}</p>
+                  <p style={{ fontSize: 12, color: colors.textMuted }}>{reg.veiculoApelido} • {reg.kmRodado} km</p>
+                </div>
+                <button onClick={() => handleExcluir(reg.id)} style={{ padding: 6, background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 8, color: colors.danger, cursor: 'pointer' }}>
+                  <Trash2 size={14} />
+                </button>
               </div>
-              <button onClick={() => handleExcluir(reg.id)} style={{ background: 'none', border: 'none', color: colors.danger, cursor: 'pointer', fontSize: 18 }}>🗑</button>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ textAlign: 'center' }}><p style={{ fontSize: 11, color: colors.textMuted }}>Ganho</p><p style={{ fontSize: 15, fontWeight: 600, color: colors.accent }}>{fmtMoeda(reg.ganhoBrutoTotal)}</p></div>
-              <div style={{ textAlign: 'center' }}><p style={{ fontSize: 11, color: colors.textMuted }}>Combustível</p><p style={{ fontSize: 15, fontWeight: 600, color: colors.danger }}>{fmtMoeda(reg.gastoCombustivelCalculado)}</p></div>
-              <div style={{ textAlign: 'center' }}><p style={{ fontSize: 11, color: colors.textMuted }}>Lucro</p><p style={{ fontSize: 15, fontWeight: 700, color: reg.lucroLiquido >= 0 ? colors.accent : colors.danger }}>{fmtMoeda(reg.lucroLiquido)}</p></div>
-            </div>
-          </Card>
-        ))
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
+                <div style={{ textAlign: 'center', padding: 8, background: 'rgba(0,184,148,0.05)', borderRadius: 8 }}>
+                  <p style={{ fontSize: 11, color: colors.textMuted }}>Ganho</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: colors.accent }}>{fmtMoeda(reg.ganhoBrutoTotal)}</p>
+                </div>
+                <div style={{ textAlign: 'center', padding: 8, background: 'rgba(225,112,85,0.05)', borderRadius: 8 }}>
+                  <p style={{ fontSize: 11, color: colors.textMuted }}>Combustível</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: colors.danger }}>{fmtMoeda(reg.gastoCombustivelCalculado)}</p>
+                </div>
+                <div style={{ textAlign: 'center', padding: 8, background: 'rgba(0,184,148,0.05)', borderRadius: 8 }}>
+                  <p style={{ fontSize: 11, color: colors.textMuted }}>Lucro</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: reg.lucroLiquido >= 0 ? colors.accent : colors.danger }}>{fmtMoeda(reg.lucroLiquido)}</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {reg.ganhos.map(g => (
+                  <span key={g.id} style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, background: 'rgba(0,184,148,0.15)', color: colors.accent }}>
+                    {g.plataformaNome}: {fmtMoeda(g.valor)}
+                  </span>
+                ))}
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   )
