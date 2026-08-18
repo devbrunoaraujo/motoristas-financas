@@ -193,3 +193,18 @@ export interface DepreciacaoResponse {
   valorAtualEstimado?: number
   diasDesdeAquisicao: number
 }
+
+export interface DespesaRequest {
+  categoria: CategoriaDespesa
+  descricao?: string
+  valor: number
+  data: string
+}
+
+export interface DespesaResponse {
+  id: number
+  categoria: CategoriaDespesa
+  descricao?: string
+  valor: number
+  data: string
+}

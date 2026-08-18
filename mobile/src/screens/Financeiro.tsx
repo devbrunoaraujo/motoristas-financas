@@ -1,19 +1,29 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as financeiroService from '../services/financeiroService'
-import type { CustoFixoResponse, PontoEquilibrioResponse } from '../types'
+import * as despesaService from '../services/despesaService'
+import type { CustoFixoResponse, PontoEquilibrioResponse, DespesaResponse } from '../types'
 import { Card, Button, Input, Loading, EmptyState, colors } from '../components/ui'
-import { ArrowLeft, DollarSign, Plus, Trash2, Save, X, TrendingUp, TrendingDown, Target, PiggyBank } from 'lucide-react'
+import { ArrowLeft, DollarSign, Plus, Trash2, Save, X, TrendingUp, TrendingDown, Target, PiggyBank, Receipt } from 'lucide-react'
+
+const categoriaLabel: Record<string, string> = {
+  MANUTENCAO: 'Manutenção',
+  ALIMENTACAO: 'Alimentação',
+  LIMPEZA: 'Limpeza',
+  SEGURO: 'Seguro',
+  OUTROS: 'Outros',
+}
 
 export default function Financeiro() {
   const navigate = useNavigate()
   const [custos, setCustos] = useState<CustoFixoResponse[]>([])
   const [pontoEquilibrio, setPontoEquilibrio] = useState<PontoEquilibrioResponse | null>(null)
+  const [despesas, setDespesas] = useState<DespesaResponse[]>([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [mostrarForm, setMostrarForm] = useState(false)
-  const [tab, setTab] = useState<'custos' | 'pontoEquilibrio'>('custos')
+  const [tab, setTab] = useState<'custos' | 'despesas' | 'pontoEquilibrio'>('custos')
 
   const [descricao, setDescricao] = useState('')
   const [valorMensal, setValorMensal] = useState('')
@@ -23,11 +33,12 @@ export default function Financeiro() {
   async function carregarDados() {
     try {
       setCarregando(true)
-      const [c, p] = await Promise.all([
+      const [c, p, d] = await Promise.all([
         financeiroService.listarCustosFixos(),
-        financeiroService.getPontoEquilibrio()
+        financeiroService.getPontoEquilibrio(),
+        despesaService.listarDespesas()
       ])
-      setCustos(c); setPontoEquilibrio(p)
+      setCustos(c); setPontoEquilibrio(p); setDespesas(d)
     } catch { setErro('Erro ao carregar dados') } finally { setCarregando(false) }
   }
 
@@ -43,14 +54,29 @@ export default function Financeiro() {
     } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
   }
 
-  async function handleExcluir(id: number) {
+  async function handleExcluirCusto(id: number) {
     if (!confirm('Excluir este custo?')) return
     try { await financeiroService.excluirCustoFixo(id); carregarDados() } catch { setErro('Erro ao excluir') }
   }
 
+  async function handleExcluirDespesa(id: number) {
+    if (!confirm('Excluir esta despesa?')) return
+    try { await despesaService.excluirDespesa(id); carregarDados() } catch { setErro('Erro ao excluir') }
+  }
+
   function fmtMoeda(v: number) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }
+  function fmtData(d?: string) { return d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '—' }
 
   const totalCustos = custos.reduce((acc, c) => acc + c.valorMensal, 0)
+
+  // Get current month expenses
+  const hoje = new Date()
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+  const despesasMes = despesas.filter(d => {
+    const dataDespesa = new Date(d.data + 'T00:00:00')
+    return dataDespesa >= inicioMes
+  })
+  const totalDespesasMes = despesasMes.reduce((acc, d) => acc + d.valor, 0)
 
   if (carregando) return <Loading />
 
@@ -69,11 +95,31 @@ export default function Financeiro() {
       {erro && <div style={{ padding: '10px 14px', background: 'rgba(225,112,85,0.1)', borderRadius: 12, color: colors.danger, fontSize: 14, marginBottom: 16 }}>{erro}</div>}
       {sucesso && <div style={{ padding: '10px 14px', background: 'rgba(0,184,148,0.1)', borderRadius: 12, color: colors.accent, fontSize: 14, marginBottom: 16 }}>{sucesso}</div>}
 
+      {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 16 }}>
+        <Card style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Custos Fixos</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: colors.danger }}>{fmtMoeda(totalCustos)}</p>
+          <p style={{ fontSize: 10, color: colors.textMuted }}>/mês</p>
+        </Card>
+        <Card style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Despesas Mês</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: colors.warning }}>{fmtMoeda(totalDespesasMes)}</p>
+          <p style={{ fontSize: 10, color: colors.textMuted }}>variáveis</p>
+        </Card>
+        <Card style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 11, color: colors.textMuted, marginBottom: 4 }}>Total Mês</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: colors.danger }}>{fmtMoeda(totalCustos + totalDespesasMes)}</p>
+          <p style={{ fontSize: 10, color: colors.textMuted }}>fixos + variáveis</p>
+        </Card>
+      </div>
+
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         {[
           { key: 'custos', label: 'Custos Fixos', icon: DollarSign },
-          { key: 'pontoEquilibrio', label: 'Ponto de Equilíbrio', icon: Target },
+          { key: 'despesas', label: 'Despesas', icon: Receipt },
+          { key: 'pontoEquilibrio', label: 'Ponto Equilíbrio', icon: Target },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key as any)}
             style={{
@@ -124,7 +170,37 @@ export default function Financeiro() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <p style={{ fontSize: 18, fontWeight: 700, color: colors.danger }}>{fmtMoeda(c.valorMensal)}</p>
-                    <button onClick={() => handleExcluir(c.id)} style={{ padding: 6, background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 8, color: colors.danger, cursor: 'pointer' }}><Trash2 size={14} /></button>
+                    <button onClick={() => handleExcluirCusto(c.id)} style={{ padding: 6, background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 8, color: colors.danger, cursor: 'pointer' }}><Trash2 size={14} /></button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Despesas */}
+      {tab === 'despesas' && (
+        <>
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 14, color: colors.textSecondary }}>
+              Despesas do mês: <strong>{fmtMoeda(totalDespesasMes)}</strong>
+            </p>
+          </div>
+
+          {despesas.length === 0 ? (
+            <EmptyState icon="📋" title="Nenhuma despesa" description="Despesas de manutenção aparecerão aqui" />
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {despesas.map((d) => (
+                <Card key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: colors.text }}>{d.descricao || categoriaLabel[d.categoria]}</p>
+                    <p style={{ fontSize: 13, color: colors.textMuted }}>{fmtData(d.data)} • {categoriaLabel[d.categoria]}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <p style={{ fontSize: 18, fontWeight: 700, color: colors.danger }}>{fmtMoeda(d.valor)}</p>
+                    <button onClick={() => handleExcluirDespesa(d.id)} style={{ padding: 6, background: 'rgba(225,112,85,0.1)', border: 'none', borderRadius: 8, color: colors.danger, cursor: 'pointer' }}><Trash2 size={14} /></button>
                   </div>
                 </Card>
               ))}
