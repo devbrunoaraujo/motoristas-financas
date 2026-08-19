@@ -21,3 +21,6 @@ frontend/dist-ssr/
 
 # Claude Code (pessoal, não compartilhado)
 .claude/settings.local.json
+
+# MiMoCode plans (gerados automaticamente)
+.mimocode/plans/
