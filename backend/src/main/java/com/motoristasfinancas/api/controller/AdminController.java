@@ -21,6 +21,7 @@ import com.motoristasfinancas.api.dto.AssinaturaResponse;
 import com.motoristasfinancas.api.dto.ConfirmarPagamentoRequest;
 import com.motoristasfinancas.api.dto.TrialInfoResponse;
 import com.motoristasfinancas.api.repository.UsuarioRepository;
+import com.motoristasfinancas.api.security.RequireAdmin;
 import com.motoristasfinancas.api.service.AdminService;
 
 import jakarta.validation.Valid;
@@ -34,39 +35,52 @@ public class AdminController {
     private final AdminService adminService;
     private final UsuarioRepository usuarioRepository;
 
+    @RequireAdmin
     @GetMapping("/dashboard")
-    public ResponseEntity<AdminDashboardResponse> getDashboard() {
+    public ResponseEntity<AdminDashboardResponse> getDashboard(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(adminService.getDashboard());
     }
 
+    @RequireAdmin
     @GetMapping("/usuarios")
-    public ResponseEntity<List<AdminUsuarioResponse>> listarUsuarios() {
+    public ResponseEntity<List<AdminUsuarioResponse>> listarUsuarios(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(adminService.listarUsuarios());
     }
 
+    @RequireAdmin
     @PostMapping("/usuarios")
     public ResponseEntity<AdminUsuarioResponse> criarUsuario(
+            @AuthenticationPrincipal User user,
             @RequestBody @Valid AdminCriarUsuarioRequest request) {
         return ResponseEntity.ok(adminService.criarUsuario(request));
     }
 
+    @RequireAdmin
     @PutMapping("/usuarios/{id}")
     public ResponseEntity<AdminUsuarioResponse> editarUsuario(
+            @AuthenticationPrincipal User user,
             @PathVariable Long id,
             @RequestBody @Valid AdminEditarUsuarioRequest request) {
         return ResponseEntity.ok(adminService.editarUsuario(id, request));
     }
 
+    @RequireAdmin
     @PutMapping("/usuarios/{id}/inativar")
-    public ResponseEntity<AdminUsuarioResponse> inativarUsuario(@PathVariable Long id) {
+    public ResponseEntity<AdminUsuarioResponse> inativarUsuario(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id) {
         return ResponseEntity.ok(adminService.inativarUsuario(id));
     }
 
+    @RequireAdmin
     @PutMapping("/usuarios/{id}/reativar")
-    public ResponseEntity<AdminUsuarioResponse> reativarUsuario(@PathVariable Long id) {
+    public ResponseEntity<AdminUsuarioResponse> reativarUsuario(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id) {
         return ResponseEntity.ok(adminService.reativarUsuario(id));
     }
 
+    @RequireAdmin
     @PostMapping("/confirmar-pagamento")
     public ResponseEntity<AssinaturaResponse> confirmarPagamento(
             @AuthenticationPrincipal User user,
@@ -75,6 +89,7 @@ public class AdminController {
         return ResponseEntity.ok(adminService.confirmarPagamento(request, adminId));
     }
 
+    @RequireAdmin
     @PutMapping("/usuarios/{id}/plano/{planoId}")
     public ResponseEntity<AssinaturaResponse> alterarPlano(
             @AuthenticationPrincipal User user,
