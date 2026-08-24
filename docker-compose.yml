@@ -1,7 +1,7 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: mfinancas-mysql
+    container_name: kmup-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
       MYSQL_DATABASE: ${DB_NAME:-financas_db}
@@ -17,7 +17,7 @@ services:
 
   backend:
     build: ./backend
-    container_name: mfinancas-backend
+    container_name: kmup-backend
     depends_on:
       mysql:
         condition: service_healthy
@@ -33,7 +33,7 @@ services:
 
   frontend:
     build: ./frontend
-    container_name: mfinancas-frontend
+    container_name: kmup-frontend
     depends_on:
       - backend
     environment:

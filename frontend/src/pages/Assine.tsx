@@ -24,7 +24,7 @@ export default function Assine() {
   }
 
   function abrirWhatsApp() {
-    const mensagem = encodeURIComponent('Olá! Quero assinar um plano do Motoristas Finanças.')
+    const mensagem = encodeURIComponent('Olá! Quero assinar um plano do KmUp.')
     const url = whatsappAdmin
       ? `https://wa.me/${whatsappAdmin}?text=${mensagem}`
       : `https://wa.me/?text=${mensagem}`

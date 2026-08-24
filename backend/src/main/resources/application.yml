@@ -1,6 +1,6 @@
 spring:
   application:
-    name: motoristas-financas-api
+    name: kmup-api
 
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:financas_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Sao_Paulo

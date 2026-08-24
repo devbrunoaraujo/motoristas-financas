@@ -1,4 +1,4 @@
-# Especificação — SaaS Financeiro para Motoristas de Aplicativo
+# Especificação — KmUp: SaaS Financeiro para Motoristas de Aplicativo
 
 > Documento de referência do projeto. Serve de base para o CLAUDE.md do monorepo
 > e para os primeiros prompts de implementação no Claude Code.

@@ -12,8 +12,8 @@ export default defineConfig({
       },
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Motoristas Finanças',
-        short_name: 'MF Finanças',
+        name: 'KmUp',
+        short_name: 'KmUp',
         description: 'Controle financeiro para motoristas de aplicativo',
         theme_color: '#0a0a1a',
         background_color: '#0a0a1a',

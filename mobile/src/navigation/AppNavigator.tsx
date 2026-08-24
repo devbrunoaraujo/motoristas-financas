@@ -38,13 +38,8 @@ function NavBar() {
         padding: '0 16px', zIndex: 100,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 8,
-            background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentLight})`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 'bold', fontSize: 14, color: '#fff',
-          }}>MF</div>
-          <span style={{ fontWeight: 600, fontSize: 16, color: colors.text }}>Motoristas Finanças</span>
+          <img src="/logo.svg" alt="KmUp" style={{ width: 32, height: 32 }} />
+          <span style={{ fontWeight: 600, fontSize: 16, color: colors.text }}>KmUp</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 13, color: colors.textSecondary }}>{usuario?.nome}</span>

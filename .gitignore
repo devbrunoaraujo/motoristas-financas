@@ -24,3 +24,5 @@ frontend/dist-ssr/
 
 # MiMoCode plans (gerados automaticamente)
 .mimocode/plans/
+.estudos
+
