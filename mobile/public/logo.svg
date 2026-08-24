@@ -1,26 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 50" width="180" height="50">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" style="stop-color:#00b894;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#00cec9;stop-opacity:1" />
     </linearGradient>
   </defs>
   
-  <!-- Background circle -->
-  <circle cx="100" cy="100" r="95" fill="url(#grad)"/>
+  <!-- Km in bold gradient -->
+  <text x="5" y="40" font-family="'Segoe UI', Arial, sans-serif" font-size="44" font-weight="700" fill="url(#grad)" letter-spacing="-2">Km</text>
   
-  <!-- Road/path element -->
-  <path d="M 40 140 Q 100 60 160 140" stroke="white" stroke-width="12" fill="none" stroke-linecap="round"/>
-  
-  <!-- Road lines -->
-  <line x1="70" y1="115" x2="80" y2="105" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
-  <line x1="100" y1="90" x2="100" y2="80" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
-  <line x1="130" y1="115" x2="120" y2="105" stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
-  
-  <!-- Km text -->
-  <text x="100" y="170" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">Km</text>
-  
-  <!-- Up arrow -->
-  <path d="M 145 55 L 155 40 L 165 55" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="155" y1="40" x2="155" y2="70" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <!-- Up in light gray -->
+  <text x="98" y="40" font-family="'Segoe UI', Arial, sans-serif" font-size="44" font-weight="300" fill="#6c6c8a" letter-spacing="-1">Up</text>
 </svg>
