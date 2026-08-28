@@ -1,0 +1,96 @@
+# docker-compose.prod.yml
+#
+# Este arquivo simula, na sua máquina, como a aplicação vai rodar no
+# servidor de produção (a EC2 que criaremos na Fase 2). É um arquivo
+# SEPARADO do docker-compose.yml de desenvolvimento — não o substitui.
+#
+# Uso: docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mfinancas-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    # DIFERENÇA IMPORTANTE: em dev, a porta 3306 é publicada pro host
+    # ("3306:3306") pra você poder conectar com DBeaver/MySQL Workbench
+    # à vontade. Em produção, isso é uma porta a mais exposta pra
+    # internet sem necessidade nenhuma — só o backend, que está na
+    # mesma rede Docker, precisa falar com o MySQL. Por isso aqui NÃO
+    # existe bloco "ports:" para o mysql: ele fica acessível só
+    # internamente, pelo nome do serviço ("mysql"), na porta 3306.
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # "restart: unless-stopped" diz ao Docker: se esse container cair
+    # (crash, servidor reiniciou, etc.), suba ele de novo sozinho —
+    # a menos que alguém tenha parado manualmente. Em dev isso não
+    # importa tanto (você está olhando a tela); em produção, ninguém
+    # vai estar olhando às 3h da manhã se o container caiu.
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      # O Dockerfile do backend já é multi-stage e "de produção" por
+      # natureza (você não roda hot-reload de Java em produção mesmo),
+      # então reaproveitamos o Dockerfile padrão — sem sufixo .prod.
+      dockerfile: Dockerfile
+    container_name: mfinancas-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    # A porta 8080 continua exposta aqui porque, por enquanto, é o
+    # frontend rodando no NAVEGADOR do usuário que precisa alcançar a
+    # API diretamente. Lá na Fase 7 (domínio/HTTPS), um proxy reverso
+    # na frente vai assumir esse papel e essa porta deixa de precisar
+    # ficar pública.
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      # Aqui SIM apontamos pro Dockerfile.prod que criamos — é o que
+      # builda os arquivos estáticos e serve via Nginx, em vez de
+      # subir o Vite dev server.
+      dockerfile: Dockerfile.prod
+      # "args" injeta valores no ARG do Dockerfile no momento do
+      # build (lembra do ARG VITE_API_URL que comentamos?). É por
+      # isso que ele precisa estar aqui em "build.args", e não em
+      # "environment" — environment só afeta o container em
+      # execução, não o processo de build da imagem.
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    container_name: mfinancas-frontend
+    depends_on:
+      - backend
+    # Repare: NENHUM "volumes:" aqui. Em dev, o volume
+    # "./frontend:/app" existe pra refletir suas edições de código
+    # instantaneamente (hot-reload). Em produção, o código já está
+    # "assado" dentro da imagem (Fase 0 gerou isso) — montar um
+    # volume aqui destruiria esse objetivo e reintroduziria a
+    # dependência do disco local.
+    #
+    # A porta mudou de 5173 (porta do Vite dev server) para 80
+    # (porta em que o Nginx escuta dentro do container, definida no
+    # nginx.conf e no EXPOSE do Dockerfile.prod).
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
