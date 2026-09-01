@@ -28,3 +28,10 @@ frontend/dist-ssr/
 .mimocode/plans/
 .estudos
 
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+
