@@ -15,3 +15,16 @@ module "network" {
   projeto    = var.projeto
   aws_region = var.aws_region
 }
+
+module "compute" {
+  source = "../../modules/compute"
+
+  projeto = var.projeto
+  # Repare: aqui usamos "module.network.XXX" — é assim que um módulo
+  # consome o OUTPUT de outro módulo. É a "cola" que conecta as peças:
+  # a EC2 nasce dentro da subnet e do security group que o módulo
+  # network já criou.
+  subnet_id         = module.network.subnet_publica_id
+  security_group_id = module.network.security_group_ec2_id
+  chave_publica_ssh = var.chave_publica_ssh
+}
