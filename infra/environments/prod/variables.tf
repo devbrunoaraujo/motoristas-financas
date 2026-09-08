@@ -16,3 +16,11 @@ variable "projeto" {
   type        = string
   default     = "kmup"
 }
+
+variable "chave_publica_ssh" {
+  description = "Conteúdo da chave pública SSH (arquivo .pub), para acesso à EC2"
+  type        = string
+  # SEM default de propósito: isso obriga você a fornecer o valor
+  # via terraform.tfvars (arquivo local, ignorado pelo Git) ou -var
+  # na linha de comando. Nunca escrevemos isso fixo no código.
+}
