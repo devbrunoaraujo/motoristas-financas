@@ -13,3 +13,8 @@ output "ec2_ip_publico" {
 output "ec2_instance_id" {
   value = module.compute.instance_id
 }
+
+output "rds_endpoint" {
+  description = "Endereço de conexão do RDS (host:porta) — usar no DB_HOST do backend"
+  value       = module.database.endpoint
+}

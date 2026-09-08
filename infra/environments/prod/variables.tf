@@ -24,3 +24,19 @@ variable "chave_publica_ssh" {
   # via terraform.tfvars (arquivo local, ignorado pelo Git) ou -var
   # na linha de comando. Nunca escrevemos isso fixo no código.
 }
+
+variable "db_name" {
+  type    = string
+  default = "financas_db"
+}
+
+variable "db_username" {
+  type    = string
+  default = "admin"
+}
+
+variable "db_password" {
+  description = "Senha do RDS — vem do terraform.tfvars, nunca do código"
+  type        = string
+  sensitive   = true
+}

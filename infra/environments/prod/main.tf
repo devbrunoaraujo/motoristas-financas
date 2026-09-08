@@ -28,3 +28,14 @@ module "compute" {
   security_group_id = module.network.security_group_ec2_id
   chave_publica_ssh = var.chave_publica_ssh
 }
+
+module "database" {
+  source = "../../modules/database"
+
+  projeto            = var.projeto
+  subnet_ids         = module.network.subnets_privadas_ids
+  security_group_id  = module.network.security_group_rds_id
+  db_name            = var.db_name
+  db_username        = var.db_username
+  db_password        = var.db_password
+}
