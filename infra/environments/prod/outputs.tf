@@ -18,3 +18,11 @@ output "rds_endpoint" {
   description = "Endereço de conexão do RDS (host:porta) — usar no DB_HOST do backend"
   value       = module.database.endpoint
 }
+
+output "ecr_backend_url" {
+  value = module.registry.backend_repository_url
+}
+
+output "ecr_frontend_url" {
+  value = module.registry.frontend_repository_url
+}
