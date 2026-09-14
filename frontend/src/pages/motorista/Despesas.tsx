@@ -43,7 +43,11 @@ export default function Despesas() {
     e.preventDefault(); setErro('')
     const dados: DespesaRequest = { categoria, descricao: descricao || undefined, valor: Number(valor), data }
     try {
-      editando ? await despesaService.atualizarDespesa(editando.id, dados) : await despesaService.criarDespesa(dados)
+      if (editando) {
+        await despesaService.atualizarDespesa(editando.id, dados)
+      } else {
+        await despesaService.criarDespesa(dados)
+      }
       limparForm(); carregarDespesas()
     } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
   }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 50" width="180" height="50">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00b894;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00cec9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Km in bold gradient -->
+  <text x="5" y="40" font-family="'Segoe UI', Arial, sans-serif" font-size="44" font-weight="700" fill="url(#grad)" letter-spacing="-2">Km</text>
+  
+  <!-- Up in light gray -->
+  <text x="98" y="40" font-family="'Segoe UI', Arial, sans-serif" font-size="44" font-weight="300" fill="#6c6c8a" letter-spacing="-1">Up</text>
+</svg>

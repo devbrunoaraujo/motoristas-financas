@@ -1,4 +1,4 @@
-# Motoristas Finanças — Monorepo
+# KmUp — Monorepo
 
 SaaS para motoristas de aplicativo organizarem suas finanças (ganhos por
 plataforma, gasto estimado com combustível, despesas, dashboard de

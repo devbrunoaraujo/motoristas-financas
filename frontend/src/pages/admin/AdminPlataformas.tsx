@@ -34,7 +34,11 @@ export default function AdminPlataformas() {
     e.preventDefault(); setErro(''); setSucesso('')
     const dados: PlataformaRequest = { nome, descricao: descricao || undefined }
     try {
-      editando ? await plataformaService.editarPlataforma(editando.id, dados) : await plataformaService.criarPlataforma(dados)
+      if (editando) {
+        await plataformaService.editarPlataforma(editando.id, dados)
+      } else {
+        await plataformaService.criarPlataforma(dados)
+      }
       setSucesso(editando ? 'Plataforma atualizada!' : 'Plataforma criada!')
       limparForm(); carregarPlataformas()
     } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
