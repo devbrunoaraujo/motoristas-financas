@@ -57,7 +57,7 @@ export default function Dashboard() {
       setDados(data)
       setUltimosDias(dias)
       setProgresso(prog)
-    } catch (err: any) {
+    } catch {
       setErro('Erro ao carregar dashboard')
     } finally {
       setCarregando(false)

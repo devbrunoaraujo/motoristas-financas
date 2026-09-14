@@ -60,7 +60,11 @@ export default function Veiculos() {
       kmAtual: kmAtual ? Number(kmAtual) : undefined,
     }
     try {
-      editando ? await veiculoService.atualizarVeiculo(editando.id, dados) : await veiculoService.criarVeiculo(dados)
+      if (editando) {
+        await veiculoService.atualizarVeiculo(editando.id, dados)
+      } else {
+        await veiculoService.criarVeiculo(dados)
+      }
       limparForm(); carregarVeiculos()
     } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
   }
