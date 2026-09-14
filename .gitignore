@@ -8,12 +8,10 @@ backend/target/
 frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
-*.tsbuildinfo
 
 # Env
 .env
 *.env.local
-.env.prod
 
 # IDE
 .idea/
@@ -26,12 +24,3 @@ frontend/dist-ssr/
 
 # MiMoCode plans (gerados automaticamente)
 .mimocode/plans/
-.estudos
-
-# Terraform
-**/.terraform/*
-*.tfstate
-*.tfstate.*
-*.tfvars
-crash.log
-

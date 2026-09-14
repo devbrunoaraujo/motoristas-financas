@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.kmup.app',
-  appName: 'KmUp',
+  appId: 'com.motoristasfinancas.app',
+  appName: 'Motoristas Finanças',
   webDir: 'dist',
   server: {
     androidScheme: 'http',
