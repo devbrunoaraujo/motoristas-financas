@@ -45,3 +45,10 @@ module "registry" {
 
   projeto = var.projeto
 }
+
+module "cicd" {
+  source = "../../modules/cicd"
+
+  projeto    = var.projeto
+  aws_region = var.aws_region
+}
