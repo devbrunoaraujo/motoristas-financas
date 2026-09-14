@@ -1,4 +1,4 @@
-# Documentação Técnica — KmUp
+# Documentação Técnica — Motoristas Finanças
 
 ## Índice
 1. [Visão Geral da Aplicação](#visão-geral)

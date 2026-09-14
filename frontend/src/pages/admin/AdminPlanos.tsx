@@ -36,11 +36,7 @@ export default function AdminPlanos() {
     e.preventDefault(); setErro('')
     const dados: PlanoRequest = { nome, valorMensal: Number(valorMensal), limiteVeiculos: Number(limiteVeiculos), descricaoFuncionalidades: descricao || undefined }
     try {
-      if (editando) {
-        await adminService.atualizarPlano(editando.id, dados)
-      } else {
-        await adminService.criarPlano(dados)
-      }
+      editando ? await adminService.atualizarPlano(editando.id, dados) : await adminService.criarPlano(dados)
       limparForm(); carregarPlanos()
     } catch (err: any) { setErro(err.response?.data?.mensagem || 'Erro ao salvar') }
   }
