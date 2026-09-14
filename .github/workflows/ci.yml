@@ -1,0 +1,139 @@
+# .github/workflows/ci.yml
+#
+# Este arquivo descreve um "pipeline": uma sequência de passos que o
+# GitHub executa automaticamente, numa máquina virtual temporária
+# (fornecida de graça pelo GitHub), toda vez que algo relevante
+# acontece no repositório (aqui: push ou PR nas branches develop/main).
+
+name: CI
+
+# "on" define QUANDO esse workflow roda.
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+# Variáveis de ambiente disponíveis para TODOS os jobs abaixo.
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 116884075753.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  # ============================================
+  # JOB 1: build e teste do backend (Java/Maven)
+  # ============================================
+  backend:
+    name: Backend - build e testes
+    runs-on: ubuntu-latest
+    steps:
+      # "actions/checkout" é praticamente sempre o primeiro passo:
+      # baixa o código do repositório para dentro da máquina virtual.
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: "maven" # cacheia as dependências do Maven entre execuções — builds mais rápidos
+
+      - name: Build e testes
+        working-directory: ./backend
+        run: mvn -B clean verify
+        # "-B" = batch mode (sem prompts interativos, não faz sentido
+        # num pipeline automatizado). "verify" compila E roda os
+        # testes — se não existir nenhum teste ainda no projeto, o
+        # Maven só reporta "Tests run: 0" e segue normalmente; não é
+        # erro.
+
+  # ============================================
+  # JOB 2: build e teste do frontend (React/Vite)
+  # ============================================
+  frontend:
+    name: Frontend - build e testes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: ./frontend
+        run: npm ci
+        # Lembra por que isso funciona sem erro? Porque o
+        # package-lock.json existe e está commitado desde a Fase 0.
+
+      - name: Lint
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Build (inclui checagem de tipos do TypeScript)
+        working-directory: ./frontend
+        run: npm run build
+        # Esse é o passo que teria pego, ANTES de qualquer deploy,
+        # os erros de tipagem no Dashboard.tsx que só descobrimos na
+        # hora do build de produção, lá na Fase 0.
+
+  # ============================================
+  # JOB 3: build e push das imagens Docker
+  # ============================================
+  docker:
+    name: Build e push das imagens
+    runs-on: ubuntu-latest
+    # "needs" faz esse job só rodar DEPOIS que backend e frontend
+    # terminarem com sucesso — sem isso, ele rodaria em paralelo, e
+    # não faz sentido publicar uma imagem de algo que talvez nem
+    # compile.
+    needs: [backend, frontend]
+    # Só builda e envia imagem em PUSH de verdade (merge), não em
+    # todo PR aberto — evita gastar o limite de 500MB do ECR com
+    # imagens de branches que talvez nem sejam aceitas.
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      # Autentica usando as credenciais do usuário IAM dedicado
+      # (kmup-github-actions) que criamos via Terraform — guardadas
+      # nos Secrets do repositório, nunca no código.
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login no ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build e push - backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/kmup-backend:latest
+            ${{ env.ECR_REGISTRY }}/kmup-backend:${{ github.sha }}
+          # A tag com o SHA do commit permite voltar pra uma versão
+          # anterior específica depois, se precisar (rollback) — não
+          # dependemos só da tag "latest", que sempre muda.
+
+      - name: Build e push - frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile.prod
+          push: true
+          build-args: |
+            VITE_API_URL=${{ vars.VITE_API_URL }}
+          tags: |
+            ${{ env.ECR_REGISTRY }}/kmup-frontend:latest
+            ${{ env.ECR_REGISTRY }}/kmup-frontend:${{ github.sha }}
