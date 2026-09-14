@@ -164,7 +164,7 @@ export default function Dashboard() {
               <YAxis tick={{ fill: '#a0a0c0', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
               <Tooltip
                 contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: 13 }}
-                formatter={(value, name) => {
+                formatter={(value: any, name: any) => {
                   const entry = barData.find(b => b.ganho === value || b.combustivel === value)
                   if (name === 'Ganho Bruto') return [`${value}% (${formatarMoeda(entry?.ganhoValor || 0)})`, name]
                   return [`${value}% (${formatarMoeda(entry?.combustivelValor || 0)})`, name]
@@ -190,7 +190,7 @@ export default function Dashboard() {
               </linearGradient>
             </defs>
             <XAxis dataKey="name" tick={{ fill: '#a0a0c0', fontSize: 12 }} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }} formatter={(value) => [formatarMoeda(Number(value)), '']} />
+            <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }} formatter={(value: any) => [formatarMoeda(Number(value)), '']} />
             <Area type="monotone" dataKey="value" stroke="#00b894" fill="url(#colorValue)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
@@ -206,7 +206,7 @@ export default function Dashboard() {
                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={4} dataKey="value">
                   {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }} formatter={(value) => [formatarMoeda(Number(value)), '']} />
+                <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }} formatter={(value: any) => [formatarMoeda(Number(value)), '']} />
               </PieChart>
             </ResponsiveContainer>
             <div style={{ flex: 1 }}>
