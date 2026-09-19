@@ -5,6 +5,6 @@ output "instance_id" {
 }
 
 output "ip_publico" {
-  description = "IP público da EC2 — vamos usar pra SSH e pra acessar a aplicação"
-  value       = aws_instance.app.public_ip
+  description = "IP público FIXO da EC2 (Elastic IP) — não muda mais em applies ou restarts"
+  value       = aws_eip.app.public_ip
 }
