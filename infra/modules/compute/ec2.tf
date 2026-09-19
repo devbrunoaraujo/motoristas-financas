@@ -27,6 +27,11 @@ resource "aws_instance" "app" {
 
   vpc_security_group_ids = [var.security_group_id]
 
+  # Anexa a IAM Role (via Instance Profile) definida em
+  # iam-role.tf — é isso que permite a instância autenticar sozinha
+  # no ECR, sem nenhuma chave fixa gravada nela.
+  iam_instance_profile = aws_iam_instance_profile.ec2_ecr_pull.name
+
   # "user_data" é um script que roda AUTOMATICAMENTE na primeira vez
   # que a instância liga — sem precisar você entrar via SSH pra
   # instalar nada manualmente. Aqui instalamos o Docker.
@@ -50,6 +55,16 @@ resource "aws_instance" "app" {
     # Permite rodar "docker" sem precisar de "sudo" toda vez,
     # usando o usuário padrão "ubuntu" da AMI.
     usermod -aG docker ubuntu
+
+    # AWS CLI — necessário para "aws ecr get-login-password".
+    # Como a instância tem a IAM Role anexada, o CLI usa essas
+    # credenciais automaticamente (via metadata da instância),
+    # sem precisar de "aws configure" nem chaves fixas.
+    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o awscliv2.zip
+    apt-get install -y unzip
+    unzip -q awscliv2.zip
+    ./aws/install
+    rm -rf awscliv2.zip aws/
   EOF
 
   # Tamanho do disco. 20GB cabe dentro do Free Tier (limite de 30GB
