@@ -1,0 +1,23 @@
+# docker-compose.ec2.yml
+#
+# Diferente do docker-compose.prod.yml (Fase 0, que sobe um MySQL em
+# container para testes locais), este arquivo é o que roda DE VERDADE
+# na EC2: não sobe banco nenhum — aponta para o RDS real — e não
+# builda nada localmente, só baixa as imagens já prontas do ECR.
+
+services:
+  backend:
+    image: 116884075753.dkr.ecr.us-east-1.amazonaws.com/kmup-backend:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+
+  frontend:
+    image: 116884075753.dkr.ecr.us-east-1.amazonaws.com/kmup-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
