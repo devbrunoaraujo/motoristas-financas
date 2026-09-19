@@ -2,6 +2,7 @@ package com.motoristasfinancas.api.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,6 +31,12 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final AcessoInterceptor acessoInterceptor;
 
+    // Em produção, vem da variável de ambiente ALLOWED_ORIGINS
+    // (ver application.yml e docker-compose.ec2.yml). Em dev local,
+    // cai nesse default com localhost.
+    @Value("${app.allowed-origins}")
+    private String allowedOriginsRaw;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -55,13 +62,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "capacitor://localhost",
-                "https://localhost",
-                "http://localhost",
-                "http://10.0.0.230:5173"
-        ));
+        configuration.setAllowedOrigins(
+                java.util.Arrays.stream(allowedOriginsRaw.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList()
+        );
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
