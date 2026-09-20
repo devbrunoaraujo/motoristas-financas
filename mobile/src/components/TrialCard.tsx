@@ -38,7 +38,7 @@ export default function TrialCard() {
   const porcentagem = Math.max(0, Math.min(100, (diasRestantes / 7) * 100))
 
   function abrirWhatsApp() {
-    const mensagem = encodeURIComponent('Olá! Quero assinar um plano do Motoristas Finanças.')
+    const mensagem = encodeURIComponent('Olá! Quero assinar um plano do KmUp.')
     const url = whatsappAdmin
       ? `https://wa.me/${whatsappAdmin}?text=${mensagem}`
       : `https://wa.me/?text=${mensagem}`

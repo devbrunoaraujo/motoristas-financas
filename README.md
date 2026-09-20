@@ -1,4 +1,4 @@
-# Motoristas Finanças
+# KmUp
 
 SaaS para motoristas de aplicativo controlarem ganhos, gastos com
 combustível e despesas, com dashboard de indicadores e metas.

@@ -1,0 +1,87 @@
+# ======================================================================
+# ESTÁGIO 1: "build" — onde COMPILAMOS o projeto
+# ======================================================================
+# Toda imagem Docker parte de uma imagem-base já pronta (não criamos
+# um Linux do zero). Aqui usamos a imagem oficial do Node.js 20,
+# na variante "alpine": uma distribuição Linux minimalista (~5MB),
+# usada quase sempre em imagens Docker porque deixa tudo mais leve.
+FROM node:20-alpine AS build
+# "AS build" dá um APELIDO a este estágio. É isso que torna o
+# Dockerfile "multi-stage" (várias imagens dentro do mesmo arquivo).
+# No final, só levamos para a imagem final o que realmente
+# precisamos rodar em produção — e aqui não é o Node.js, é o
+# resultado do build (arquivos HTML/JS/CSS estáticos).
+
+# Define a pasta de trabalho DENTRO do container.
+# A partir daqui, todo comando roda relativo a /app.
+WORKDIR /app
+
+# Copiamos APENAS os arquivos de dependências primeiro — não o
+# código todo ainda. Por quê? O Docker cacheia cada instrução (cada
+# linha) como uma camada. Se package.json/package-lock.json não
+# mudaram desde o último build, o Docker REAPROVEITA o resultado do
+# "npm ci" abaixo, em vez de baixar tudo de novo. Isso acelera muito
+# os builds seguintes (e é ainda mais importante quando isso rodar
+# no GitHub Actions, na Fase 4).
+COPY package*.json ./
+
+# Instala as dependências exatamente nas versões travadas no
+# package-lock.json. "npm ci" (Clean Install) é preferido a
+# "npm install" em builds automatizados: é mais rápido e não tenta
+# resolver/atualizar versões — garante builds reprodutíveis.
+RUN npm ci
+
+# Só agora copiamos o restante do código-fonte. Se você mudar um
+# componente React mas não o package.json, o Docker reaproveita o
+# "npm ci" (camada acima) e só refaz a partir daqui pra baixo.
+COPY . .
+
+# ARG cria uma variável disponível SÓ durante o build da imagem
+# (diferente de ENV, que fica disponível também em runtime).
+# Precisamos disso porque o Vite "assa" (bake) as variáveis VITE_*
+# dentro do JavaScript final durante o "npm run build" — ou seja,
+# depois de buildada, a imagem não consegue mais trocar essa URL em
+# tempo de execução. É um detalhe importante que vamos retomar lá na
+# Fase 4/5, quando tivermos ambientes diferentes (staging/produção).
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+# Roda o build de produção do Vite. Isso gera a pasta /app/dist com
+# HTML/CSS/JS otimizados: minificados, com hash no nome do arquivo
+# (ex: index-a1b2c3.js) pra permitir cache agressivo no navegador.
+RUN npm run build
+
+# ======================================================================
+# ESTÁGIO 2: "runtime" — o que REALMENTE vai rodar em produção
+# ======================================================================
+# Trocamos COMPLETAMENTE a imagem-base. Node.js, npm e o código-fonte
+# não existem mais aqui — só precisamos servir arquivos estáticos, e
+# pra isso usamos o Nginx: um servidor web leve, rápido e especializado
+# nisso. Resultado: uma imagem final de ~25MB, em vez de ~400MB+ se
+# mantivéssemos o Node.js dentro dela.
+FROM nginx:1.27-alpine
+
+# Copia SOMENTE a pasta /app/dist, gerada no estágio "build" acima,
+# para a pasta padrão que o Nginx usa para servir arquivos.
+# "--from=build" é a "ponte" entre os dois estágios: pegamos um
+# resultado de um estágio anterior sem levar o resto dele junto.
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Substitui a configuração padrão do Nginx pela nossa (ver nginx.conf
+# ao lado). É necessário porque nossa aplicação é uma SPA (Single Page
+# Application) com rotas controladas pelo React Router no navegador —
+# o Nginx precisa saber devolver sempre o index.html.
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# EXPOSE é documentação: avisa "este container escuta na porta 80".
+# Não abre porta nenhuma sozinho — quem faz isso é o docker-compose
+# ou o comando "docker run -p", que veremos na Fase 0 também.
+EXPOSE 80
+
+# Comando executado quando o container SOBE. Roda o Nginx em
+# primeiro plano ("daemon off"). Isso é essencial: se o Nginx
+# rodasse em background (comportamento padrão dele), o container
+# entenderia que o processo principal terminou e se encerraria
+# imediatamente. Um container só fica "vivo" enquanto o processo
+# principal (PID 1) estiver rodando em primeiro plano.
+CMD ["nginx", "-g", "daemon off;"]
