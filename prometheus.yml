@@ -1,0 +1,16 @@
+# prometheus.yml
+#
+# Fica na raiz do projeto, ao lado do docker-compose.ec2.yml, e é
+# montado dentro do container do Prometheus.
+
+global:
+  scrape_interval: 15s # a cada 15s, vai lá e "raspa" as métricas mais recentes
+
+scrape_configs:
+  - job_name: "kmup-backend"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      # "backend" é o nome do serviço no docker-compose — dentro da
+      # rede interna do Docker, isso funciona como um hostname.
+      # Não precisa de IP nem de porta exposta publicamente.
+      - targets: ["backend:8080"]
