@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/health").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/planos").permitAll()
                         .requestMatchers("/plataformas").permitAll()
                         .requestMatchers("/configuracoes/chave/**").permitAll()

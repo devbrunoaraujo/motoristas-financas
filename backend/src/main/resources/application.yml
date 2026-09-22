@@ -24,7 +24,7 @@ server:
 
 app:
   # Lista separada por vírgula. Em produção, definido via env var
-  # ALLOWED_ORIGINS no .env da EC2 (ex: http://SEU_IP_PUBLICO).
+  # ALLOWED_ORIGINS no .env da EC2 (ex: https://kmup.autos,https://www.kmup.autos).
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,capacitor://localhost,https://localhost,http://localhost}
 
 jwt:
@@ -34,3 +34,20 @@ jwt:
 springdoc:
   swagger-ui:
     path: /docs
+
+management:
+  endpoints:
+    web:
+      # Só expõe esses dois — por padrão o Actuator teria dezenas de
+      # endpoints (env, beans, threaddump...), que não queremos
+      # acessíveis nem internamente.
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: never
+  metrics:
+    tags:
+      # Aparece em toda métrica exportada — útil se um dia o Prometheus
+      # raspar mais de uma aplicação.
+      application: kmup-api
