@@ -4,6 +4,11 @@
 # container para testes locais), este arquivo é o que roda DE VERDADE
 # na EC2: não sobe banco nenhum — aponta para o RDS real — e não
 # builda nada localmente, só baixa as imagens já prontas do ECR.
+#
+# A partir da Fase 7, nenhum container publica porta para 0.0.0.0
+# (todo mundo) — só para 127.0.0.1 (localhost da própria EC2). Quem
+# fala com o mundo lá fora é o Nginx, rodando direto no host (fora do
+# Docker), que termina o HTTPS e repassa pra cá por dentro.
 
 services:
   backend:
@@ -12,12 +17,49 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
 
   frontend:
     image: 116884075753.dkr.ecr.us-east-1.amazonaws.com/kmup-frontend:latest
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "127.0.0.1:8081:80"
     depends_on:
       - backend
+
+  # Coleta as métricas do backend periodicamente e guarda o histórico.
+  # Não precisa de porta publicada nem para localhost — só o Grafana
+  # (mesma rede Docker interna) precisa falar com ele.
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    depends_on:
+      - backend
+
+  # Painel visual, lendo os dados do Prometheus.
+  grafana:
+    image: grafana/grafana:11.1.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      # Nunca deixar no admin/admin padrão — gerado por você no .env.
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      # Sem isso, o Grafana gera links internos com o IP/porta
+      # errados quando acessado através do proxy reverso.
+      - GF_SERVER_ROOT_URL=https://grafana.kmup.autos
+    depends_on:
+      - prometheus
+
+volumes:
+  # Sem isso, o histórico de métricas e os dashboards salvos seriam
+  # perdidos toda vez que o container reiniciasse.
+  prometheus_data:
+  grafana_data:

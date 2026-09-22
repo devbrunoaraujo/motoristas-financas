@@ -22,22 +22,24 @@ resource "aws_security_group" "ec2" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # HTTP — pro frontend (Nginx, porta 80) ser acessível pelos usuários.
+  # HTTP — usado só para redirecionar para HTTPS e para o Certbot
+  # validar a emissão/renovação do certificado (desafio HTTP-01).
   ingress {
-    description = "HTTP"
+    description = "HTTP (redirect + Certbot)"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Porta da API Spring Boot — o frontend (rodando no navegador do
-  # usuário) precisa alcançar essa porta diretamente, do jeito que o
-  # projeto está estruturado hoje (lembra do VITE_API_URL?).
+  # HTTPS — a partir de agora, TUDO (frontend, API, Grafana) passa
+  # por aqui, através do Nginx rodando na própria EC2. Por isso as
+  # portas 8080 (API) e 3000 (Grafana) não precisam mais estar
+  # abertas publicamente — o Nginx fala com elas via localhost.
   ingress {
-    description = "API backend"
-    from_port   = 8080
-    to_port     = 8080
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }

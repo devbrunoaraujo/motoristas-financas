@@ -28,6 +28,19 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Actuator: expõe endpoints de health/métricas (/actuator/**) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Micrometer + Prometheus: traduz as métricas do Actuator
+             para o formato que o Prometheus sabe "raspar" -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- AOP para anotações personalizadas -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
