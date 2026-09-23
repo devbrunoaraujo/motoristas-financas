@@ -2,24 +2,43 @@
 #
 # Diferente do ci.yml (que roda em develop e main, testando e
 # publicando imagens no ECR), este workflow só faz uma coisa: quando
-# algo é mergeado em MAIN, conecta na EC2 via SSH e manda ela puxar
-# as imagens mais novas do ECR e reiniciar os containers.
+# o CI termina com sucesso em MAIN, conecta na EC2 via SSH e manda
+# ela puxar as imagens mais novas do ECR e reiniciar os containers.
 #
 # Ou seja: merge em develop = build + testa + publica no ECR.
 #          merge em main    = tudo isso + DEPLOY em produção.
+#
+# IMPORTANTE: o gatilho é "workflow_run" (dispara DEPOIS que o
+# workflow "CI" terminar), não "push" direto. Motivo: CI e CD
+# disparados pelo MESMO push rodam em paralelo, sem nenhuma garantia
+# de ordem — o CD podia terminar de fazer o "docker compose pull"
+# ANTES do CI publicar a imagem nova no ECR, e aí "puxar" a imagem
+# antiga sem perceber (foi exatamente isso que aconteceu na Fase 7).
+# Com "workflow_run", o CD só começa depois que o CI já terminou de
+# verdade, então a imagem nova já está garantidamente no ECR.
 
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
     branches: [main]
+    types: [completed]
 
 jobs:
   deploy:
+    # Só roda se o CI terminou com sucesso (não roda se o CI falhou).
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+        with:
+          # Sem isso, o checkout pegaria o topo da branch no momento
+          # em que o CD roda — que pode já ter avançado mais um
+          # commit desde que o CI terminou. Aqui, travamos no commit
+          # EXATO que o CI acabou de processar.
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       # Copia o docker-compose.ec2.yml atualizado para a EC2, caso
       # ele tenha mudado nesse commit. Se não mudou, sobrescreve com
