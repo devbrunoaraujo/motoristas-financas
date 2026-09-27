@@ -10,7 +10,7 @@ export default defineConfig({
       devOptions: {
         enabled: false,
       },
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.png'],
       manifest: {
         name: 'KmUp',
         short_name: 'KmUp',
@@ -23,9 +23,9 @@ export default defineConfig({
         categories: ['finance', 'business'],
         icons: [
           {
-            src: '/favicon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/favicon.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
         ],
       },

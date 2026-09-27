@@ -46,21 +46,13 @@ export default function Login() {
         margin: '0 auto',
         animation: 'slideUp 0.5s ease forwards',
       }}>
-        {/* Logo */}
+        {/* Logo — mesmo arquivo usado no cabeçalho do dashboard (App.tsx) */}
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-2xl)' }}>
-          <div style={{
-            width: 64,
-            height: 64,
-            borderRadius: 'var(--radius-lg)',
-            background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto var(--space-md)',
-            fontSize: 24,
-            fontWeight: 800,
-            boxShadow: 'var(--shadow-glow)',
-          }}>MF</div>
+          <img
+            src="/logo.png"
+            alt="KmUp"
+            style={{ height: 90, marginBottom: 'var(--space-md)' }}
+          />
           <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Bem-vindo de volta</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Entre na sua conta para continuar</p>
         </div>
