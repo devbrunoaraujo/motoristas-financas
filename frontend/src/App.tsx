@@ -56,7 +56,7 @@ function NavBar() {
         padding: '0 var(--space-md)', zIndex: 100,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.svg" alt="KmUp" style={{ width: 32, height: 32 }} />
+          <img src="/logo-icon.png" alt="KmUp" style={{ height: 28 }} />
           <span style={{ fontWeight: 600, fontSize: 16 }}>KmUp</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

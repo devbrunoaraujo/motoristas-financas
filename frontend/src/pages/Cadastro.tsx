@@ -42,13 +42,11 @@ export default function Cadastro() {
     }}>
       <div style={{ maxWidth: 400, width: '100%', margin: '0 auto', animation: 'slideUp 0.5s ease forwards' }}>
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-2xl)' }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: 'var(--radius-lg)',
-            background: 'linear-gradient(135deg, var(--accent), var(--accent-light))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto var(--space-md)', fontSize: 24, fontWeight: 800,
-            boxShadow: 'var(--shadow-glow)',
-          }}>MF</div>
+          <img
+            src="/logo.png"
+            alt="KmUp"
+            style={{ height: 90, marginBottom: 'var(--space-md)' }}
+          />
           <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 4 }}>Crie sua conta</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Comece a controlar suas finanças</p>
         </div>
